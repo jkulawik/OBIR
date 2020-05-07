@@ -8,4 +8,4 @@ Następnie na początku każdej sesji programowania:
 2. Skopiować ścieżkę .ino.hex wypisaną w terminalu w Arduino do `run_sim.bat`
 Ścieżka nie powinna zmieniać się dopóki nie zamkniecie Arduino, więc następnie dla każdej zmiany w kodzie wystarczy wykonać następujące kroki:
 3. (Opcjonalnie) Zamknąć aktualnie uruchomioną instancję EBSimUnoEth
-3. Uruchomić EBSimUnoEth za pomocą `run_sim.bat`
+4. Uruchomić EBSimUnoEth za pomocą `run_sim.bat`
