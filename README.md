@@ -1,1 +1,1 @@
-Projekt
+Simple CoAP server
