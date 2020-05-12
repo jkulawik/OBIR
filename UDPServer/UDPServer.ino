@@ -41,10 +41,42 @@ class Numbers
     {
       nums[current_len] = num;
       current_len++;
-      //TODO quick sort here
+      BubbleSort();
       return true;
     }
     else return false;
+  }
+
+  BubbleSort() //mozna zmodyfikowac do Comb sort jezeli bedzie za wolny
+  {
+    int i,j;
+    bool swapped;
+    for(i=0; i < current_len-1; i++)
+    {
+      /*ostatnie i liczb jest juz na miejscu*/
+      for(j=0; j < current_len-i-1; j++)
+      {
+        swapped = false;
+        if(nums[j] > nums[j+1])
+        {
+          swap(&nums[j], &nums[j+1]); 
+          swapped = true;
+        }
+      }
+      /*jezeli po przejsciu calego podzbioru nic nie zmieniono,
+      oznacza to ze calosc jest juz posortowana*/
+      if(swapped == false) 
+      break; 
+    }
+  }
+
+  /*Funkcja pomocnicza do sortowania;
+  Zamienia dwie liczby pod danymi adresami.*/
+  void swap(int *xp, int *yp)  
+  {
+    int temp = *xp;  
+    *xp = *yp;  
+    *yp = temp;  
   }
 
 /* Pobieranie wynikow; przepisujemy te wartosci z tablicy, ktore nie sa 'smieciowe':
