@@ -19,8 +19,13 @@ NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
 LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+Objasnienia w komentarzach po polsku dopisane przez zespol projektowy.
 */
-//definicja biblioteki i jej zmiennych wraz z nadaniem wartosci
+
+
+//Definicja biblioteki i jej zmiennych wraz z nadaniem wartosci
+//endif znajduje sie na koncu pliku
 #ifndef __SIMPLE_COAP_H__
 #define __SIMPLE_COAP_H__
 
@@ -34,18 +39,38 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define COAP_HEADER_SIZE 4
 #define COAP_OPTION_HEADER_SIZE 1
 #define COAP_PAYLOAD_MARKER 0xFF
+
+
+//Maksymalna liczba opcji w pakiecie CoAP
 #ifndef COAP_MAX_OPTION_NUM
 #define COAP_MAX_OPTION_NUM 10
 #endif
+
 #ifndef COAP_BUF_MAX_SIZE
 #define COAP_BUF_MAX_SIZE 1024
 #endif
+
 #define COAP_DEFAULT_PORT 5683
 
+//Zwraca liczbe z bitami kodu odpowiedzi c.dd
 #define RESPONSE_CODE(class, detail) ((class << 5) | (detail))
+/*Bity liczby class są przesuwane o 5, a następnie sumowane z detail, np
+dla 2.05 (calosc ma 8 bit):
+   0000 0010 ----> "2"
+<<         5
+------------
+   0100 0000
+|  0000 0101 ----> "5"
+------------
+   0100 0101
+dla CoAP pierwsze 3 bity to klasa, czyli zapisujemy jako:
+   010.00101 ----> "2.05"
+*/
+
+
 #define COAP_OPTION_DELTA(v, n) (v < 13 ? (*n = (0xFF & v)) : (v <= 0xFF + 13 ? (*n = 13) : (*n = 14)))
 
-//zdefiniowane sygnaly
+//Zdefiniowanie typu odpowiedzi
 typedef enum {
     COAP_CON = 0,
     COAP_NONCON = 1,
@@ -53,7 +78,7 @@ typedef enum {
     COAP_RESET = 3
 } COAP_TYPE;
 
-//zdefiniowane metody
+//Zdefiniowanie tylko klasy  (lub "metody"; c w c.dd)
 typedef enum {
     COAP_GET = 1,
     COAP_POST = 2,
@@ -61,7 +86,7 @@ typedef enum {
     COAP_DELETE = 4
 } COAP_METHOD;
 
-//zdefiniowane odpowiedzi
+//Zdefiniowane klasy i kodu odpowiedzi (c.dd)
 typedef enum {
     COAP_CREATED = RESPONSE_CODE(2, 1),
     COAP_DELETED = RESPONSE_CODE(2, 2),
@@ -86,7 +111,7 @@ typedef enum {
     COAP_PROXYING_NOT_SUPPORTED = RESPONSE_CODE(5, 5)
 } COAP_RESPONSE_CODE;
 
-//zdefiniowane opcje
+//Wybrane opcje:
 typedef enum {
     COAP_IF_MATCH = 1,
     COAP_URI_HOST = 3,
@@ -104,7 +129,7 @@ typedef enum {
     COAP_PROXY_SCHEME = 39
 } COAP_OPTION_NUMBER;
 
-//zdefiniowane typy zawartosci
+//Wybrane mozliwosci opcji Content-format (COAP_CONTENT_FORMAT)
 typedef enum {
     COAP_NONE = -1,
     COAP_TEXT_PLAIN = 0,
@@ -116,7 +141,7 @@ typedef enum {
     COAP_APPLICATION_CBOR = 60
 } COAP_CONTENT_TYPE;
 
-//definicja klasy opcji wraz z jej atrybutami
+//Definicja klasy opcji wraz z jej atrybutami
 class CoapOption {
     public:
     uint8_t number;
@@ -124,7 +149,8 @@ class CoapOption {
     uint8_t *buffer;
 };
 
-//definicja klasy pakietu wraz z jej atrybutami
+/*Definicja struktury pakietu. 
+Zawiera funkcje dodajaca opcje do pakietu.*/
 class CoapPacket {
     public:
 		uint8_t type = 0;
@@ -135,26 +161,40 @@ class CoapPacket {
 		size_t payloadlen = 0;
 		uint16_t messageid = 0;
 		uint8_t optionnum = 0;
+		
 		//tablica opcji
 		CoapOption options[COAP_MAX_OPTION_NUM];
 		
 		void addOption(uint8_t number, uint8_t length, uint8_t *opt_payload);
 };
-//definicja nowego typu - CoapCallback
+
+//Definicja szablonu funkcji typu CoapCallback.
+/*Szablon ten jest wielokrotnie uzywany do obslugi zdarzen roznych typow.*/
 typedef std::function<void(CoapPacket &, IPAddress, int)> CoapCallback;
 
-//definicja klasy Uri wraz z jej atrybutami
+/*Klasa URI. 
+Jej zadaniem jest mapowanie podanych URL na funkcje callback.*/
 class CoapUri {
     private:
+	
+		//Tablica URL
         String u[COAP_MAX_CALLBACK];
+		
+		//Tablica funkcji callback
         CoapCallback c[COAP_MAX_CALLBACK];
+		
+		/*Obie tablice tworza razem slownik, ktory mapuje URL do podanej funkcji.*/
+		
     public:
+		//Konstruktor, rezerwuje zasoby dla obu tablic
         CoapUri() {
             for (int i = 0; i < COAP_MAX_CALLBACK; i++) {
                 u[i] = "";
                 c[i] = NULL;
             }
         };
+		
+		//Dodaje funkcje callback to hash
         void add(CoapCallback call, String url) {
             for (int i = 0; i < COAP_MAX_CALLBACK; i++)
                 if (c[i] != NULL && u[i].equals(url)) {
@@ -169,8 +209,11 @@ class CoapUri {
                 }
             }
         };
+		
+		//Zwraca funkcje callback odpowiadajaca danemu URL
         CoapCallback find(String url) {
-            for (int i = 0; i < COAP_MAX_CALLBACK; i++) if (c[i] != NULL && u[i].equals(url)) return c[i];
+            for (int i = 0; i < COAP_MAX_CALLBACK; i++) 
+				if (c[i] != NULL && u[i].equals(url)) return c[i];
             return NULL;
         } ;
 };
@@ -180,6 +223,8 @@ class Coap {
     private:
         UDP *_udp;
         CoapUri uri;
+		
+		//Funkcja odpowiadajaca:
         CoapCallback resp;
         int _port;
 
@@ -193,17 +238,23 @@ class Coap {
         );
         bool start();
         bool start(int port);
+		//Ustawienie funkcji odpowiadajacej. Patrz: typedef CoapCallback
         void response(CoapCallback c) { resp = c; }
 
         void server(CoapCallback c, String url) { uri.add(c, url); }
+		
+		//Przeciazenia funkcji wysylania odpowiedzi
         uint16_t sendResponse(IPAddress ip, int port, uint16_t messageid);
         uint16_t sendResponse(IPAddress ip, int port, uint16_t messageid, const char *payload);
         uint16_t sendResponse(IPAddress ip, int port, uint16_t messageid, const char *payload, size_t payloadlen);
         uint16_t sendResponse(IPAddress ip, int port, uint16_t messageid, const char *payload, size_t payloadlen, COAP_RESPONSE_CODE code, COAP_CONTENT_TYPE type, const uint8_t *token, int tokenlen);
         
+		
         uint16_t get(IPAddress ip, int port, const char *url);
+		
         uint16_t put(IPAddress ip, int port, const char *url, const char *payload);
         uint16_t put(IPAddress ip, int port, const char *url, const char *payload, size_t payloadlen);
+		
         uint16_t send(IPAddress ip, int port, const char *url, COAP_TYPE type, COAP_METHOD method, const uint8_t *token, uint8_t tokenlen, const uint8_t *payload, size_t payloadlen);
         uint16_t send(IPAddress ip, int port, const char *url, COAP_TYPE type, COAP_METHOD method, const uint8_t *token, uint8_t tokenlen, const uint8_t *payload, size_t payloadlen, COAP_CONTENT_TYPE content_type);
 
