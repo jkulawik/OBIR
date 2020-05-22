@@ -155,7 +155,7 @@ uint16_t Coap::send(IPAddress ip, int port, const char *url, COAP_TYPE type, COA
     packet.payload = payload;
     packet.payloadlen = payloadlen;
     packet.optionnum = 0;
-    packet.messageid = rand();
+    packet.messageid = rand(); //Uwaga; tu jest rand, czyli bedzie do poprawy
 
     //Dodaje adres nadawcy jako opcje URI_HOST 
     char ipaddress[16] = "";
@@ -170,24 +170,24 @@ uint16_t Coap::send(IPAddress ip, int port, const char *url, COAP_TYPE type, COA
 		{
 			packet.addOption(COAP_URI_PATH, i-idx, (uint8_t *)(url + idx));
 			//Dodawanie opcji URI_PATH; dlugosc = pozycja iteratora - pozycja ostatniego znaku poprzedniego fragmentu URL
-			//payload opcji = wskaznik na 
+			//payload opcji = wskaznik na pozycje odp. danych w pamieci, tzn. adres URL przesuniety o polozenie konca poprzedniego fragmentu
             idx = i + 1;
         }
     }
-
+	//To jest chyba po prostu oddzielne dodanie ostatniej opcji
     if (idx <= strlen(url)) {
 		packet.addOption(COAP_URI_PATH, strlen(url)-idx, (uint8_t *)(url + idx));
     }
 
-	// if Content-Format option
-	uint8_t optionBuffer[2] {0};
+	//Dodawanie opcji content format, jezeli zostala podana
+	uint8_t optionBuffer[2] {0}; //2 bajty zer, chyba? //mozna wrzucic pod if zeby zaosczedzic zasoby, ale to podczas testowania
 	if (content_type != COAP_NONE) {
 		optionBuffer[0] = ((uint16_t)content_type & 0xFF00) >> 8;
 		optionBuffer[1] = ((uint16_t)content_type & 0x00FF) ;
 		packet.addOption(COAP_CONTENT_FORMAT, 2, optionBuffer);
 	}
 
-    // send packet
+    //Wyslanie utworzonego pakietu
     return this->sendPacket(packet, ip, port);
 }
 
@@ -329,8 +329,11 @@ bool Coap::loop() {
 
     return true;
 }
-/*
-definicje funkcji wysylania odpowiedzi
+
+
+/*---------------------------Wszystko ponizej jest w zasadzie niepotrzebne-------------------------------*/
+
+/*Definicje funkcji wysylania odpowiedzi ACK
 - bez przekazywania payloadu
 - z payloadem
 - z payloadem o danej dlugosci
@@ -347,8 +350,6 @@ uint16_t Coap::sendResponse(IPAddress ip, int port, uint16_t messageid, const ch
     return this->sendResponse(ip, port, messageid, payload, payloadlen, COAP_CONTENT, COAP_TEXT_PLAIN, NULL, 0);
 }
 
-//definicja funkcji z payloadem o danej dlugosci oraz przekazaniem informacji o
-// typie odpowiedzi, typie zawartosci pakietu, tokenie i jego dlugosci
 uint16_t Coap::sendResponse(IPAddress ip, int port, uint16_t messageid, const char *payload, size_t payloadlen,
                 COAP_RESPONSE_CODE code, COAP_CONTENT_TYPE type, const uint8_t *token, int tokenlen) {
     // make packet

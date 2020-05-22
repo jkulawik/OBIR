@@ -272,6 +272,7 @@ class Coap {
         uint16_t send(IPAddress ip, int port, const char *url, COAP_TYPE type, COAP_METHOD method, const uint8_t *token, uint8_t tokenlen, const uint8_t *payload, size_t payloadlen);
 		
 		//Wlasciwe wysylanie; tworzy i wysyla pakiet
+		//Uwaga: message ID jest losowe; trzeba to bedzie zmienic
         uint16_t send(IPAddress ip, int port, const char *url, COAP_TYPE type, COAP_METHOD method, const uint8_t *token, uint8_t tokenlen, const uint8_t *payload, size_t payloadlen, COAP_CONTENT_TYPE content_type);
 
         bool loop();
