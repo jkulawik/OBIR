@@ -67,10 +67,14 @@ dla CoAP pierwsze 3 bity to klasa, czyli zapisujemy jako:
    010.00101 ----> "2.05"
 */
 
-
+//Makro obliczajace delte opcji (???)
 #define COAP_OPTION_DELTA(v, n) (v < 13 ? (*n = (0xFF & v)) : (v <= 0xFF + 13 ? (*n = 13) : (*n = 14)))
+/*Opcje sa sortowane wg. numeru; delta = numer opcji - numer poprzedniej opcji, 
+i zapewne wlasnie to jest zadaniem makra.
+Skladnia korzysta z tego:
+https://pl.wikipedia.org/wiki/Operator_warunkowy */
 
-//Zdefiniowanie typu odpowiedzi
+//Zdefiniowanie typu odpowiedzi:
 typedef enum {
     COAP_CON = 0,
     COAP_NONCON = 1,
@@ -146,11 +150,11 @@ class CoapOption {
     public:
     uint8_t number;
     uint8_t length;
-    uint8_t *buffer;
+    uint8_t *buffer; //wskaznik na payload opcji
 };
 
 /*Definicja struktury pakietu. 
-Zawiera funkcje dodajaca opcje do pakietu.*/
+Zawiera funkcje, ktora dodaje opcje do pakietu.*/
 class CoapPacket {
     public:
 		uint8_t type = 0;
@@ -160,7 +164,7 @@ class CoapPacket {
 		const uint8_t *payload = NULL;
 		size_t payloadlen = 0;
 		uint16_t messageid = 0;
-		uint8_t optionnum = 0;
+		uint8_t optionnum = 0; //licznik liczby opcji danego pakietu
 		
 		//tablica opcji
 		CoapOption options[COAP_MAX_OPTION_NUM];
@@ -173,7 +177,8 @@ class CoapPacket {
 typedef std::function<void(CoapPacket &, IPAddress, int)> CoapCallback;
 
 /*Klasa URI. 
-Jej zadaniem jest mapowanie podanych URL na funkcje callback.*/
+Jest slownikiem funkcji callback kluczowanych adresami URL.
+Jej zadaniem jest mapowanie dodanych do niej URL na funkcje callback.*/
 class CoapUri {
     private:
 	
@@ -218,32 +223,43 @@ class CoapUri {
         } ;
 };
 
-//definicja klasy protokołu CoAP wraz z jej atrybutami
+//Definicja klasy protokołu CoAP wraz z jej atrybutami
 class Coap {
     private:
         UDP *_udp;
+		
+		//Obiekt przechowujacy wszysktie dostepne w wezle URI, oraz ich funkcje callback
         CoapUri uri;
 		
 		//Funkcja odpowiadajaca:
         CoapCallback resp;
         int _port;
-
+		
+		//Wysyla podany pakiet na podane IP poprzez port domyslny
         uint16_t sendPacket(CoapPacket &packet, IPAddress ip);
+		//Wysyla podany pakiet na podane IP poprzez wybrany port
         uint16_t sendPacket(CoapPacket &packet, IPAddress ip, int port);
+		
         int parseOption(CoapOption *option, uint16_t *running_delta, uint8_t **buf, size_t buflen);
 
     public:
         Coap(
             UDP& udp
         );
+		
+		//Ustawia port CoAP na domyslny
         bool start();
+		//Ustawia port CoAP na podany
         bool start(int port);
+		
 		//Ustawienie funkcji odpowiadajacej. Patrz: typedef CoapCallback
         void response(CoapCallback c) { resp = c; }
 
+		//Dodaje zasob do serwera
         void server(CoapCallback c, String url) { uri.add(c, url); }
 		
-		//Przeciazenia funkcji wysylania odpowiedzi
+		//Przeciazenia funkcji wysylania odpowiedzi ACK; 
+		//To bedzie do wywalenia, bo nie potrzebujemy tego
         uint16_t sendResponse(IPAddress ip, int port, uint16_t messageid);
         uint16_t sendResponse(IPAddress ip, int port, uint16_t messageid, const char *payload);
         uint16_t sendResponse(IPAddress ip, int port, uint16_t messageid, const char *payload, size_t payloadlen);
@@ -251,11 +267,11 @@ class Coap {
         
 		
         uint16_t get(IPAddress ip, int port, const char *url);
-		
         uint16_t put(IPAddress ip, int port, const char *url, const char *payload);
         uint16_t put(IPAddress ip, int port, const char *url, const char *payload, size_t payloadlen);
-		
         uint16_t send(IPAddress ip, int port, const char *url, COAP_TYPE type, COAP_METHOD method, const uint8_t *token, uint8_t tokenlen, const uint8_t *payload, size_t payloadlen);
+		
+		//Wlasciwe wysylanie; tworzy i wysyla pakiet
         uint16_t send(IPAddress ip, int port, const char *url, COAP_TYPE type, COAP_METHOD method, const uint8_t *token, uint8_t tokenlen, const uint8_t *payload, size_t payloadlen, COAP_CONTENT_TYPE content_type);
 
         bool loop();

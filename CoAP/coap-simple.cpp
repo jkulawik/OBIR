@@ -10,32 +10,44 @@ void CoapPacket::addOption(uint8_t number, uint8_t length, uint8_t *opt_payload)
     options[optionnum].length = length;
     options[optionnum].buffer = opt_payload;
 
-    ++optionnum;
+    ++optionnum; //licznik liczby opcji danego pakietu
 }
+
 //definicja konstruktora dla klasy protokołu CoAP
-Coap::Coap(
-    UDP& udp
-) {
+Coap::Coap(UDP& udp)
+{
     this->_udp = &udp;
 }
-//definicja funkcji przekazujacej domyslny port
+//Ustawia port CoAP na domyslny
 bool Coap::start() {
     this->start(COAP_DEFAULT_PORT);
     return true;
 }
-//definicja funkcji przekazujacej dany port
+//Ustawia port CoAP na podany
 bool Coap::start(int port) {
     this->_udp->begin(port);
     return true;
 }
-//definicja funkcji przekierowującej pakiet na domyslny port
-uint16_t Coap::sendPacket(CoapPacket &packet, IPAddress ip) {
+
+//Wysyla podany pakiet na podane IP poprzez port domyslny
+uint16_t Coap::sendPacket(CoapPacket &packet, IPAddress ip) 
+{
     return this->sendPacket(packet, ip, COAP_DEFAULT_PORT);
 }
-//definicja funkcji przekierowującej pakiet na dany port
-uint16_t Coap::sendPacket(CoapPacket &packet, IPAddress ip, int port) {
-    uint8_t buffer[COAP_BUF_MAX_SIZE];
-    uint8_t *p = buffer;
+
+//Wysyla podany pakiet na podane IP poprzez wybrany port
+uint16_t Coap::sendPacket(CoapPacket &packet, IPAddress ip, int port) 
+{
+    uint8_t buffer[COAP_BUF_MAX_SIZE]; //Pakiet to de-facto tablica osmiobitowych l. calkowitych (a raczej bajtow danych)
+    uint8_t *p = buffer; 	//"Uchwyt" pakietu, cos ala iterator chodzacy po pamieci bufora
+	
+	/*Idea tej funkcji to kopiowanie danych na pozycje p w pamieci,
+	a nastepnie przesuwanie p do przodu.*/
+	
+	/*Przydaje sie znac funkcje memcpy:
+	memcpy(dest, src, size);
+	Funkcja ta kopiuje size bajtów z obiektu src do obiektu dest. */
+	
     uint16_t running_delta = 0;
     uint16_t packetSize = 0;
 
@@ -56,7 +68,7 @@ uint16_t Coap::sendPacket(CoapPacket &packet, IPAddress ip, int port) {
         packetSize += packet.tokenlen;
     }
 
-    // make option header
+    /*---------------Dodawanie opcji----------------*/
     for (int i = 0; i < packet.optionnum; i++)  {
         uint32_t optdelta;
         uint8_t len, delta;
@@ -85,14 +97,15 @@ uint16_t Coap::sendPacket(CoapPacket &packet, IPAddress ip, int port) {
             packetSize+=2;
         }
 
-        memcpy(p, packet.options[i].buffer, packet.options[i].length);
+        memcpy(p, packet.options[i].buffer, packet.options[i].length); //Payload opcji (buffer) jest kopiowany na ostatnia pozycje 
         p += packet.options[i].length;
         packetSize += packet.options[i].length + 1;
         running_delta = packet.options[i].number;
     }
+	/*---------------Koniec dodawania opcji----------------*/
 
     // make payload
-    if (packet.payloadlen > 0) {
+    if(packet.payloadlen > 0) {
         if ((packetSize + 1 + packet.payloadlen) >= COAP_BUF_MAX_SIZE) {
             return 0;
         }
@@ -107,11 +120,13 @@ uint16_t Coap::sendPacket(CoapPacket &packet, IPAddress ip, int port) {
 
     return packet.messageid;
 }
+
 /*
 definicje funkcji dostepnych metod
 send z opcja definiująca typ zawartosci pakietu lub bez
 */
-uint16_t Coap::get(IPAddress ip, int port, const char *url) {
+uint16_t Coap::get(IPAddress ip, int port, const char *url) 
+{
     return this->send(ip, port, url, COAP_CON, COAP_GET, NULL, 0, NULL, 0);
 }
 
@@ -127,9 +142,10 @@ uint16_t Coap::send(IPAddress ip, int port, const char *url, COAP_TYPE type, COA
     return this->send(ip, port, url, type, method, token, tokenlen, payload, payloadlen, COAP_NONE);
 }
 
+//Tworzy i wysyla pakiet
 uint16_t Coap::send(IPAddress ip, int port, const char *url, COAP_TYPE type, COAP_METHOD method, const uint8_t *token, uint8_t tokenlen, const uint8_t *payload, size_t payloadlen, COAP_CONTENT_TYPE content_type) {
 
-    // make packet
+    //Tworzenie pakietu
     CoapPacket packet;
 
     packet.type = type;
@@ -141,16 +157,20 @@ uint16_t Coap::send(IPAddress ip, int port, const char *url, COAP_TYPE type, COA
     packet.optionnum = 0;
     packet.messageid = rand();
 
-    // use URI_HOST UIR_PATH
+    //Dodaje adres nadawcy jako opcje URI_HOST 
     char ipaddress[16] = "";
-    sprintf(ipaddress, "%d.%d.%d.%d", ip[0], ip[1], ip[2], ip[3]);
+    sprintf(ipaddress, "%d.%d.%d.%d", ip[0], ip[1], ip[2], ip[3]); //przepisanie adresu z obiektu IPAddress do tablicy znakow
     packet.addOption(COAP_URI_HOST, strlen(ipaddress), (uint8_t *)ipaddress);
 
-    // parse url
+	//Dodawanie URL jako kolejnych opcji URI_PATH
     int idx = 0;
-    for (int i = 0; i < strlen(url); i++) {
-        if (url[i] == '/') {
+    for (int i = 0; i < strlen(url); i++) //parsowanie po tablicy znakow URL
+	{
+        if (url[i] == '/') 
+		{
 			packet.addOption(COAP_URI_PATH, i-idx, (uint8_t *)(url + idx));
+			//Dodawanie opcji URI_PATH; dlugosc = pozycja iteratora - pozycja ostatniego znaku poprzedniego fragmentu URL
+			//payload opcji = wskaznik na 
             idx = i + 1;
         }
     }
@@ -170,7 +190,8 @@ uint16_t Coap::send(IPAddress ip, int port, const char *url, COAP_TYPE type, COA
     // send packet
     return this->sendPacket(packet, ip, port);
 }
-//definicja funkcji parsujacej opcje
+
+//Definicja funkcji parsujacej opcje
 int Coap::parseOption(CoapOption *option, uint16_t *running_delta, uint8_t **buf, size_t buflen) {
     uint8_t *p = *buf;
     uint8_t headlen = 1;
