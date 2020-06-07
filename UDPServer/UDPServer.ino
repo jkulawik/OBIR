@@ -9,7 +9,7 @@ byte MAC[]={0x28, 0x16, 0xAD, 0x71, 0xB4, 0xA7}; //Adres MAC wykorzystanej karty
 
 //dlugosc pakietu z danymi dla/z UDP
 #define PACKET_BUFFER_LENGTH    50 
-unsigned char packetBuffer[PACKET_BUFFER_LENGTH];
+uint8_t packetBuffer[PACKET_BUFFER_LENGTH];
 
 //numer portu na jakim nasluchujemy 
 unsigned int localPort=UDP_SERVER_PORT;    
@@ -57,14 +57,13 @@ void loop() {
         //if(len<=0) Udp.flush();return;     //nie ma danych - wywolujemy funkcje wymiecenia bufora
             
         //prezentujemy otrzymany pakiet (zakladajac ze zawiera znaki ASCII)
-        Serial.print("Received: ");
+        Serial.println("\n\n+---Received a message---+");
         packetBuffer[len]='\0';
-        Serial.println((char*)packetBuffer);
 
         /*---Interpretacja odebranego pakietu---*/
 
         /*---Interpretacja naglowka---*/
-        //Makra z wikipedii
+
         uint8_t _version = (0xC0 & packetBuffer[0])>>6;
         Serial.print(F("CoAP version: "));Serial.println(_version, DEC);
         
@@ -78,17 +77,28 @@ void loop() {
           uint8_t _token_len = (0x0F & packetBuffer[0])>>0;
           uint8_t _class = ((packetBuffer[1]>>5)&0x07);
           uint8_t _code = ((packetBuffer[1]>>0)&0x1F);
-          uint8_t _mid = (packetBuffer[2]<<8)|(packetBuffer[3]); //Message ID
+          uint16_t _mid = (packetBuffer[2]<<8)|(packetBuffer[3]); //Message ID - ma 2 bajty
+          uint8_t _token[_token_len]; //latwiej niz tworzyc 8 opcji roznych dlugosci int
 
-          //TODO: token
+          Serial.print(F("Token length: ")); Serial.println(_token_len, DEC);
+          //Zczytanie tokena:
+          if(_token_len > 0) 
+          { 
+            Serial.println(F("Token: "));
+            for(int i = 0; i < _token_len; i++)
+            {
+              _token[i] = packetBuffer[i+4];
+              /*przepisujemy bajty; 4 to potencjalna pozycja pierwszego bajtu tokena*/
+              Serial.print(_token[i], HEX);Serial.print(F(" "));
+            }
+            Serial.println();
+          }
+          
+          Serial.print(F("Code: ")); Serial.print(_class, DEC); Serial.print(F(".0"));Serial.println(_code, DEC);
+          Serial.print(F("Message ID: ")); Serial.println(_mid, DEC);
+
           //TODO: opcje
           //TODO: payload - moze wskaznik?
-
-          Serial.print(F("Token length: "));Serial.println(_token_len, DEC);
-          Serial.print(F("Code: "));Serial.print(_class, DEC); Serial.print(F(".0"));Serial.println(_code, DEC);
-          Serial.print(F("Message ID: "));Serial.println(_mid, DEC);
-
-
 
         /*---Koniec naglowka---*/
         
