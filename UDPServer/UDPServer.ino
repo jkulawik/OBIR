@@ -26,6 +26,8 @@ Numbers Numbers;
            Liczba przechowywanych liczb jest okreslana w powyzszym pliku.
 */   
 
+#include "coap-interpreter.h"
+
 void setup() {
     //Zwyczajowe przywitanie z userem (niech wie ze system sie uruchomil poprawnie)
     Serial.begin(115200);
@@ -38,8 +40,8 @@ void setup() {
     //potwierdzenie na jakim IP dzialamy - proforma dla ebsim'a
     Serial.print(F("My IP address: "));
     for (byte thisByte = 0; thisByte < 4; thisByte++) {
-        Serial.print(ObirEthernet.localIP()[thisByte], DEC);Serial.print(F(".\n"));
-    }
+        Serial.print(ObirEthernet.localIP()[thisByte], DEC);Serial.print(F("."));
+    } Serial.println("");
 
     //Uruchomienie nasluchiwania na datagaramy UDP
     Udp.begin(localPort);
@@ -52,15 +54,62 @@ void loop() {
         //czytamy pakiet - maksymalnie do 'PACKET_BUFFER_LENGTH' bajtow
         int len=Udp.read(packetBuffer, PACKET_BUFFER_LENGTH); //dlugosc pakietu
         
-        if(len<=0) Udp.flush();return;     //nie ma danych - wywolujemy funkcje wymiecenia bufora
+        //if(len<=0) Udp.flush();return;     //nie ma danych - wywolujemy funkcje wymiecenia bufora
             
         //prezentujemy otrzymany pakiet (zakladajac ze zawiera znaki ASCII)
         Serial.print("Received: ");
         packetBuffer[len]='\0';
         Serial.println((char*)packetBuffer);
 
-        //interpretacja odebranego pakietu
+        /*---Interpretacja odebranego pakietu---*/
 
+        /*---Interpretacja naglowka---*/
+        //Makra z wikipedii
+        uint8_t _version = (0xC0 & packetBuffer[0])>>6;
+        Serial.print(F("CoAP version: "));Serial.println(_version, DEC);
+        
+        uint8_t _type = (0x30 & packetBuffer[0])>>4;              //1=NON, 0=CON
+        if(_type==0)Serial.println(F("Type: CON"));
+        
+        if(_type == 1) //Nie obslugujemy CON; szkoda zasobow
+        {
+          Serial.println(F("Type: NON"));
+          
+          uint8_t _token_len = (0x0F & packetBuffer[0])>>0;
+          uint8_t _class = ((packetBuffer[1]>>5)&0x07);
+          uint8_t _code = ((packetBuffer[1]>>0)&0x1F);
+          uint8_t _mid = (packetBuffer[2]<<8)|(packetBuffer[3]); //Message ID
+
+          //TODO: token
+          //TODO: opcje
+          //TODO: payload - moze wskaznik?
+
+          Serial.print(F("Token length: "));Serial.println(_token_len, DEC);
+          Serial.print(F("Code: "));Serial.print(_class, DEC); Serial.print(F(".0"));Serial.println(_code, DEC);
+          Serial.print(F("Message ID: "));Serial.println(_mid, DEC);
+
+
+
+        /*---Koniec naglowka---*/
+        
+        /*---Koniec obieranego pakietu; Odpowiadanie---*/
+          if(_class == 0)
+          {
+            //1+1; jako wypelniacz, do usuniecia
+            if(_code == 0) 1+1; //empty; pewnie niepotrzebne
+            
+            if(_code == 1) //GET
+            {
+              1+1;
+            }
+
+            if(_code == 2) //PUT
+            {
+              1+1;
+            }
+
+          }
+        }
     }
 }
 
