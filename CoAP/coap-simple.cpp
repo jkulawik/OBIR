@@ -30,13 +30,13 @@ bool Coap::start(int port) {
 }
 
 //Wysyla podany pakiet na podane IP poprzez port domyslny
-uint16_t Coap::sendPacket(CoapPacket &packet, ObirIPAddress ip) 
+uint16_t Coap::sendPacket(CoapPacket &packet, IPAddress ip) 
 {
     return this->sendPacket(packet, ip, COAP_DEFAULT_PORT);
 }
 
 //Wysyla podany pakiet na podane IP poprzez wybrany port
-uint16_t Coap::sendPacket(CoapPacket &packet, ObirIPAddress ip, int port) 
+uint16_t Coap::sendPacket(CoapPacket &packet, IPAddress ip, int port) 
 {
     uint8_t buffer[COAP_BUF_MAX_SIZE]; //Pakiet to de-facto tablica osmiobitowych l. calkowitych (a raczej bajtow danych)
     uint8_t *p = buffer; 	//"Uchwyt" pakietu, cos ala iterator chodzacy po pamieci bufora
@@ -125,25 +125,25 @@ uint16_t Coap::sendPacket(CoapPacket &packet, ObirIPAddress ip, int port)
 definicje funkcji dostepnych metod
 send z opcja definiująca typ zawartosci pakietu lub bez
 */
-uint16_t Coap::get(ObirIPAddress ip, int port, const char *url) 
+uint16_t Coap::get(IPAddress ip, int port, const char *url) 
 {
     return this->send(ip, port, url, COAP_CON, COAP_GET, NULL, 0, NULL, 0);
 }
 
-uint16_t Coap::put(ObirIPAddress ip, int port, const char *url, const char *payload) {
+uint16_t Coap::put(IPAddress ip, int port, const char *url, const char *payload) {
     return this->send(ip, port, url, COAP_CON, COAP_PUT, NULL, 0, (uint8_t *)payload, strlen(payload));
 }
 
-uint16_t Coap::put(ObirIPAddress ip, int port, const char *url, const char *payload, size_t payloadlen) {
+uint16_t Coap::put(IPAddress ip, int port, const char *url, const char *payload, size_t payloadlen) {
     return this->send(ip, port, url, COAP_CON, COAP_PUT, NULL, 0, (uint8_t *)payload, payloadlen);
 }
 
-uint16_t Coap::send(ObirIPAddress ip, int port, const char *url, COAP_TYPE type, COAP_METHOD method, const uint8_t *token, uint8_t tokenlen, const uint8_t *payload, size_t payloadlen) {
+uint16_t Coap::send(IPAddress ip, int port, const char *url, COAP_TYPE type, COAP_METHOD method, const uint8_t *token, uint8_t tokenlen, const uint8_t *payload, size_t payloadlen) {
     return this->send(ip, port, url, type, method, token, tokenlen, payload, payloadlen, COAP_NONE);
 }
 
 //Tworzy i wysyla pakiet
-uint16_t Coap::send(ObirIPAddress ip, int port, const char *url, COAP_TYPE type, COAP_METHOD method, const uint8_t *token, uint8_t tokenlen, const uint8_t *payload, size_t payloadlen, COAP_CONTENT_TYPE content_type) {
+uint16_t Coap::send(IPAddress ip, int port, const char *url, COAP_TYPE type, COAP_METHOD method, const uint8_t *token, uint8_t tokenlen, const uint8_t *payload, size_t payloadlen, COAP_CONTENT_TYPE content_type) {
 
     //Tworzenie pakietu
     CoapPacket packet;
@@ -158,9 +158,9 @@ uint16_t Coap::send(ObirIPAddress ip, int port, const char *url, COAP_TYPE type,
     packet.messageid = rand(); //Uwaga; tu jest rand, czyli bedzie do poprawy
 
     //Dodaje adres nadawcy jako opcje URI_HOST 
-    char ObirIPAddress[16] = "";
-    sprintf(ObirIPAddress, "%d.%d.%d.%d", ip[0], ip[1], ip[2], ip[3]); //przepisanie adresu z obiektu ObirIPAddress do tablicy znakow
-    packet.addOption(COAP_URI_HOST, strlen(ObirIPAddress), (uint8_t *)ObirIPAddress);
+    char IPAddress[16] = "";
+    sprintf(IPAddress, "%d.%d.%d.%d", ip[0], ip[1], ip[2], ip[3]); //przepisanie adresu z obiektu IPAddress do tablicy znakow
+    packet.addOption(COAP_URI_HOST, strlen(IPAddress), (uint8_t *)IPAddress);
 
 	//Dodawanie URL jako kolejnych opcji URI_PATH
     int idx = 0;
@@ -338,19 +338,19 @@ bool Coap::loop() {
 - z payloadem
 - z payloadem o danej dlugosci
 */
-uint16_t Coap::sendResponse(ObirIPAddress ip, int port, uint16_t messageid) {
+uint16_t Coap::sendResponse(IPAddress ip, int port, uint16_t messageid) {
     return this->sendResponse(ip, port, messageid, NULL, 0, COAP_CONTENT, COAP_TEXT_PLAIN, NULL, 0);
 }
 
-uint16_t Coap::sendResponse(ObirIPAddress ip, int port, uint16_t messageid, const char *payload) {
+uint16_t Coap::sendResponse(IPAddress ip, int port, uint16_t messageid, const char *payload) {
     return this->sendResponse(ip, port, messageid, payload, strlen(payload), COAP_CONTENT, COAP_TEXT_PLAIN, NULL, 0);
 }
 
-uint16_t Coap::sendResponse(ObirIPAddress ip, int port, uint16_t messageid, const char *payload, size_t payloadlen) {
+uint16_t Coap::sendResponse(IPAddress ip, int port, uint16_t messageid, const char *payload, size_t payloadlen) {
     return this->sendResponse(ip, port, messageid, payload, payloadlen, COAP_CONTENT, COAP_TEXT_PLAIN, NULL, 0);
 }
 
-uint16_t Coap::sendResponse(ObirIPAddress ip, int port, uint16_t messageid, const char *payload, size_t payloadlen,
+uint16_t Coap::sendResponse(IPAddress ip, int port, uint16_t messageid, const char *payload, size_t payloadlen,
                 COAP_RESPONSE_CODE code, COAP_CONTENT_TYPE type, const uint8_t *token, int tokenlen) {
     // make packet
     CoapPacket packet;

@@ -35,8 +35,6 @@ Objasnienia w komentarzach po polsku dopisane przez zespol projektowy OBIR.
 //#include "Udp.h" //Zamiana na wersje OBIR
 #include <ObirEthernetUdp.h>
 
-//Do obslugi klasy ObirIPAddress
-
 
 #ifndef COAP_MAX_CALLBACK
 #define COAP_MAX_CALLBACK 10
@@ -180,7 +178,7 @@ class CoapPacket {
 
 //Definicja szablonu funkcji typu CoapCallback.
 /*Szablon ten jest wielokrotnie uzywany do obslugi zdarzen roznych typow.*/
-typedef obir::function<void(CoapPacket &, ObirIPAddress, int)> CoapCallback;
+typedef obir::function<void(CoapPacket &, IPAddress, int)> CoapCallback;
 
 /*Klasa URI. 
 Jest slownikiem funkcji callback kluczowanych adresami URL.
@@ -242,9 +240,9 @@ class Coap {
         int _port;
 		
 		//Wysyla podany pakiet na podane IP poprzez port domyslny
-        uint16_t sendPacket(CoapPacket &packet, ObirIPAddress ip);
+        uint16_t sendPacket(CoapPacket &packet, IPAddress ip);
 		//Wysyla podany pakiet na podane IP poprzez wybrany port
-        uint16_t sendPacket(CoapPacket &packet, ObirIPAddress ip, int port);
+        uint16_t sendPacket(CoapPacket &packet, IPAddress ip, int port);
 		
         int parseOption(CoapOption *option, uint16_t *running_delta, uint8_t **buf, size_t buflen);
 
@@ -266,20 +264,20 @@ class Coap {
 		
 		//Przeciazenia funkcji wysylania odpowiedzi ACK; 
 		//To bedzie do wywalenia, bo nie potrzebujemy tego
-        uint16_t sendResponse(ObirIPAddress ip, int port, uint16_t messageid);
-        uint16_t sendResponse(ObirIPAddress ip, int port, uint16_t messageid, const char *payload);
-        uint16_t sendResponse(ObirIPAddress ip, int port, uint16_t messageid, const char *payload, size_t payloadlen);
-        uint16_t sendResponse(ObirIPAddress ip, int port, uint16_t messageid, const char *payload, size_t payloadlen, COAP_RESPONSE_CODE code, COAP_CONTENT_TYPE type, const uint8_t *token, int tokenlen);
+        uint16_t sendResponse(IPAddress ip, int port, uint16_t messageid);
+        uint16_t sendResponse(IPAddress ip, int port, uint16_t messageid, const char *payload);
+        uint16_t sendResponse(IPAddress ip, int port, uint16_t messageid, const char *payload, size_t payloadlen);
+        uint16_t sendResponse(IPAddress ip, int port, uint16_t messageid, const char *payload, size_t payloadlen, COAP_RESPONSE_CODE code, COAP_CONTENT_TYPE type, const uint8_t *token, int tokenlen);
         
 		
-        uint16_t get(ObirIPAddress ip, int port, const char *url);
-        uint16_t put(ObirIPAddress ip, int port, const char *url, const char *payload);
-        uint16_t put(ObirIPAddress ip, int port, const char *url, const char *payload, size_t payloadlen);
-        uint16_t send(ObirIPAddress ip, int port, const char *url, COAP_TYPE type, COAP_METHOD method, const uint8_t *token, uint8_t tokenlen, const uint8_t *payload, size_t payloadlen);
+        uint16_t get(IPAddress ip, int port, const char *url);
+        uint16_t put(IPAddress ip, int port, const char *url, const char *payload);
+        uint16_t put(IPAddress ip, int port, const char *url, const char *payload, size_t payloadlen);
+        uint16_t send(IPAddress ip, int port, const char *url, COAP_TYPE type, COAP_METHOD method, const uint8_t *token, uint8_t tokenlen, const uint8_t *payload, size_t payloadlen);
 		
 		//Wlasciwe wysylanie; tworzy i wysyla pakiet
 		//Uwaga: message ID jest losowe; trzeba to bedzie zmienic
-        uint16_t send(ObirIPAddress ip, int port, const char *url, COAP_TYPE type, COAP_METHOD method, const uint8_t *token, uint8_t tokenlen, const uint8_t *payload, size_t payloadlen, COAP_CONTENT_TYPE content_type);
+        uint16_t send(IPAddress ip, int port, const char *url, COAP_TYPE type, COAP_METHOD method, const uint8_t *token, uint8_t tokenlen, const uint8_t *payload, size_t payloadlen, COAP_CONTENT_TYPE content_type);
 
         bool loop();
 };
