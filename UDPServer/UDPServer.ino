@@ -3,16 +3,12 @@
 #include <ObirEthernetUdp.h>    //sama klasa 'ObirEthernetUDP'
 //#include "coap-simple.h"        //Biblioteka CoAP
 
-#include <stdint.h> //test, do wyrzucenia
-#include <stdbool.h> //test
-#include <stddef.h> //test
-
 #define UDP_SERVER_PORT 5683 //najczesciej uzywany port
 
 byte MAC[]={0x28, 0x16, 0xAD, 0x71, 0xB4, 0xA7}; //Adres MAC wykorzystanej karty sieciowej
 
 //dlugosc pakietu z danymi dla/z UDP
-#define PACKET_BUFFER_LENGTH    20 
+#define PACKET_BUFFER_LENGTH    50 
 unsigned char packetBuffer[PACKET_BUFFER_LENGTH];
 
 //numer portu na jakim nasluchujemy 
@@ -21,9 +17,6 @@ unsigned int localPort=UDP_SERVER_PORT;
 /*dla podejscia z biblioteka ObirEthernetUdp, nie powinno sie kreowac 
 wiecej niz jednego obiektu klasy 'ObirEthernetUDP' */
 ObirEthernetUDP Udp;
-
-//Klasa protokolu
-//Coap coap(Udp);
 
 //Moze byc tylko jeden obiekt zbioru:
 #include "Numbers.h"
@@ -39,7 +32,7 @@ void setup() {
     Serial.println(F("OBIR eth UDP server init..."));
     Serial.print(F("Compiled on "));Serial.print(F(__DATE__));Serial.print(F(", "));Serial.println(F(__TIME__));
 
-    //inicjaja karty sieciowe - proforma dla ebsim'a    
+    //inicjaja karty sieciowej - proforma dla ebsim'a    
     ObirEthernet.begin(MAC);
 
     //potwierdzenie na jakim IP dzialamy - proforma dla ebsim'a
@@ -58,11 +51,9 @@ void loop() {
     if(packetSize>0){
         //czytamy pakiet - maksymalnie do 'PACKET_BUFFER_LENGTH' bajtow
         int len=Udp.read(packetBuffer, PACKET_BUFFER_LENGTH); //dlugosc pakietu
-        /*
-        if(len<=0){                     //nie ma danych - wywolujemy funkcje wymiecenia bufora
-            Udp.flush();return;
-        }*/
-
+        
+        if(len<=0) Udp.flush();return;     //nie ma danych - wywolujemy funkcje wymiecenia bufora
+            
         //prezentujemy otrzymany pakiet (zakladajac ze zawiera znaki ASCII)
         Serial.print("Received: ");
         packetBuffer[len]='\0';
