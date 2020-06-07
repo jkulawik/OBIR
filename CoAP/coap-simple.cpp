@@ -191,7 +191,7 @@ uint16_t Coap::send(IPAddress ip, int port, const char *url, COAP_TYPE type, COA
     return this->sendPacket(packet, ip, port);
 }
 
-//Definicja funkcji parsujacej opcje
+//Parsowanie opcji
 int Coap::parseOption(CoapOption *option, uint16_t *running_delta, uint8_t **buf, size_t buflen) {
     uint8_t *p = *buf;
     uint8_t headlen = 1;
