@@ -1,6 +1,7 @@
 #include "coap-simple.h"
 #include "Arduino.h"
 
+
 #define LOGGING
 
 //definicja funkcji dodającej opcje pakietu
@@ -14,7 +15,7 @@ void CoapPacket::addOption(uint8_t number, uint8_t length, uint8_t *opt_payload)
 }
 
 //definicja konstruktora dla klasy protokołu CoAP
-Coap::Coap(UDP& udp)
+Coap::Coap(ObirEthernetUDP& udp)
 {
     this->_udp = &udp;
 }
@@ -308,10 +309,10 @@ bool Coap::loop() {
                 }
             }
 
-            if (!uri.find(url)) {
+            if (!uri.find(url)) { //Jezeli nie znaleziono URI, wyslij COAP_NOT_FOUNT
                 sendResponse(_udp->remoteIP(), _udp->remotePort(), packet.messageid, NULL, 0,
                         COAP_NOT_FOUNT, COAP_NONE, NULL, 0);
-            } else {
+            } else { //W.p.p. znajdz callback dla uri i uzyj go
                 uri.find(url)(packet, _udp->remoteIP(), _udp->remotePort());
             }
         }

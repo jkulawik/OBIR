@@ -20,7 +20,7 @@ LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-Objasnienia w komentarzach po polsku dopisane przez zespol projektowy.
+Objasnienia w komentarzach po polsku dopisane przez zespol projektowy OBIR.
 */
 
 
@@ -30,7 +30,13 @@ Objasnienia w komentarzach po polsku dopisane przez zespol projektowy.
 #define __SIMPLE_COAP_H__
 
 #include <functional>
-#include "Udp.h"
+//#include "SmallFunctional.h"
+
+//#include "Udp.h" //Zamiana na wersje OBIR
+#include <ObirEthernetUdp.h>
+
+#include <Ethernet.h> //Do obslugi klasy IPAddress
+
 
 #ifndef COAP_MAX_CALLBACK
 #define COAP_MAX_CALLBACK 10
@@ -226,7 +232,7 @@ class CoapUri {
 //Definicja klasy protokołu CoAP wraz z jej atrybutami
 class Coap {
     private:
-        UDP *_udp;
+        ObirEthernetUDP *_udp;
 		
 		//Obiekt przechowujacy wszysktie dostepne w wezle URI, oraz ich funkcje callback
         CoapUri uri;
@@ -244,7 +250,7 @@ class Coap {
 
     public:
         Coap(
-            UDP& udp
+            ObirEthernetUDP& udp
         );
 		
 		//Ustawia port CoAP na domyslny
@@ -277,5 +283,6 @@ class Coap {
 
         bool loop();
 };
+
 
 #endif
