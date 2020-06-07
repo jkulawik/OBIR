@@ -1,7 +1,11 @@
 #include <ObirDhcp.h>           //dla pobierania IP z DHCP - proforma dla ebsim'a 
 #include <ObirEthernet.h>       //niezbedne dla klasy 'ObirEthernetUDP'
 #include <ObirEthernetUdp.h>    //sama klasa 'ObirEthernetUDP'
-#include "coap-simple.h"        //Biblioteka CoAP
+//#include "coap-simple.h"        //Biblioteka CoAP
+
+#include <stdint.h> //test, do wyrzucenia
+#include <stdbool.h> //test
+#include <stddef.h> //test
 
 #define UDP_SERVER_PORT 5683 //najczesciej uzywany port
 
@@ -19,7 +23,7 @@ wiecej niz jednego obiektu klasy 'ObirEthernetUDP' */
 ObirEthernetUDP Udp;
 
 //Klasa protokolu
-Coap coap(Udp);
+//Coap coap(Udp);
 
 //Moze byc tylko jeden obiekt zbioru:
 #include "Numbers.h"
