@@ -34,7 +34,7 @@ class Numbers
     if(current_len < MAX_NUMBERS)
     {
       nums[current_len] = num;
-      current_len++;
+      ++current_len;
       void BubbleSort();
       return true;
     }
@@ -45,10 +45,10 @@ class Numbers
   {
     int i,j;
     bool swapped;
-    for(i=0; i < current_len-1; i++)
+    for(i=0; i < current_len-1; ++i)
     {
       /*ostatnie i liczb jest juz na miejscu*/
-      for(j=0; j < current_len-i-1; j++)
+      for(j=0; j < current_len-i-1; ++j)
       {
         swapped = false;
         if(nums[j] > nums[j+1])
@@ -78,7 +78,7 @@ if(Numbers.current_len == 0) //wyslac 4.08 (Request Entity Incomplete)
 else
 {
   int result[Numbers.current_len];
-  for(int i=0; i < Numbers.current_len; i++)
+  for(int i=0; i < Numbers.current_len; ++i)
   result[i] = Numbers.nums[i];
   //wyslac zawartosc result w wiadomosci 2.05 (content)
 }
@@ -89,11 +89,11 @@ else
  * Dla oszczedzania zasobow korzysta z tego samego licznika (cnt)
 int arg = //pobrac z zapytania
 int cnt, leng = 0; 
-for(; cnt < Numbers.current_len; cnt++)
-if(Numbers.nums[cnt] % arg == 0) len++;
+for(; cnt < Numbers.current_len; ++cnt)
+if(Numbers.nums[cnt] % arg == 0) ++len;
 //Wiadomo juz ile liczb jest podzielnych; mozna stworzyc tablice na wyniki
 int result[leng];
-for(cnt=0; cnt < Numbers.current_len; cnt++)
+for(cnt=0; cnt < Numbers.current_len; ++cnt)
 if(Numbers.nums[cnt] % arg == 0) result[cnt] = Numbers.nums[cnt];
  */
   

@@ -41,7 +41,7 @@ void setup() {
 
     //potwierdzenie na jakim IP dzialamy - proforma dla ebsim'a
     Serial.print(F("My IP address: "));
-    for (byte thisByte = 0; thisByte < 4; thisByte++) {
+    for (byte thisByte = 0; thisByte < 4; ++thisByte) {
         Serial.print(ObirEthernet.localIP()[thisByte], DEC);Serial.print(F("."));
     } Serial.println("");
 
@@ -87,7 +87,7 @@ void loop() {
           if(_token_len > 0) 
           {
             Serial.println(F("Token: "));
-            for(int i = 0; i < _token_len; i++)
+            for(int i = 0; i < _token_len; ++i)
             {
               _token[i] = packetBuffer[i + HEADER_SIZE];
               /*przepisujemy bajty*/
@@ -117,7 +117,7 @@ void loop() {
           {
             delta = (packetBuffer[marker] & 0xF0) >> 4; //Maska na pierwsze 4 bity
             optionLength = (packetBuffer[marker] & 0x0F) >> 4; //Maska na kolejne 4 bity
-            marker++; //przesuniecie markera na nastepny bajt
+            ++marker; //przesuniecie markera na nastepny bajt
 
             /*kiedy delta albo optionLength < 12, to jest brak rozszerzen; 
               Bajt markera oznacza wtedy wartosc opcji */
@@ -125,25 +125,25 @@ void loop() {
             if(delta == 13){
               //Jest 1 bajt rozszerzenia:
               delta+= packetBuffer[marker];
-              marker++;
+              ++marker;
             }
 
             if(delta == 14){
               //Sa 2 bajty rozszerzenia
               //TODO: to moze nie byc konieczne, zalezy czy musimy obslugiwac opcje z duzym numerem
               delta = 269 + 256*packetBuffer[marker]; //pierwszy bajt ma wieksza wage
-              marker++;
+              ++marker;
               delta += packetBuffer[marker]; //dodajemy wartosc kolejnego bajtu
-              marker++;
+              ++marker;
             }
 
             //Opcje w analogiczny sposob:
             if(optionLength == 13){
-              optionLength += packetBuffer[marker]; marker++; 
+              optionLength += packetBuffer[marker]; ++marker; 
             }
             if(optionLength == 14){
-              optionLength = 269 + 256*packetBuffer[marker]; marker++;
-              optionLength += packetBuffer[marker]; marker++;
+              optionLength = 269 + 256*packetBuffer[marker]; ++marker;
+              optionLength += packetBuffer[marker]; ++marker;
             }
 
             if(delta == 15) //Trafiono na marker payloadu
