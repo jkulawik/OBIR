@@ -119,18 +119,16 @@ void loop() {
             optionLength = (packetBuffer[marker] & 0x0F) >> 4; //Maska na kolejne 4 bity
             marker++; //przesuniecie markera na nastepny bajt
 
-            /*kiedy delta albo optionLen < 12, to jest brak rozszerzen; 
+            /*kiedy delta albo optionLength < 12, to jest brak rozszerzen; 
               Bajt markera oznacza wtedy wartosc opcji */
             
-            if(delta == 13)
-            {
+            if(delta == 13){
               //Jest 1 bajt rozszerzenia:
               delta+= packetBuffer[marker];
               marker++;
             }
 
-            if(delta == 14)
-            {
+            if(delta == 14){
               //Sa 2 bajty rozszerzenia
               //TODO: to moze nie byc konieczne, zalezy czy musimy obslugiwac opcje z duzym numerem
               delta = 269 + 256*packetBuffer[marker]; //pierwszy bajt ma wieksza wage
@@ -139,30 +137,27 @@ void loop() {
               marker++;
             }
 
-            if(optionLength == 13)
-            {
-              //Jest 1 bajt rozszerzenia:
-              optionLength += packetBuffer[marker];
-              marker++;
+            //Opcje w analogiczny sposob:
+            if(optionLength == 13){
+              optionLength += packetBuffer[marker]; marker++; 
             }
-
-            if(optionLength == 14)
-            {
-              //Sa 2 bajty rozszerzenia
-              optionLength = 269 + 256*packetBuffer[marker]; //pierwszy bajt ma wieksza wage
-              marker++;
-              optionLength += packetBuffer[marker]; //dodajemy wartosc kolejnego bajtu
-              marker++;
+            if(optionLength == 14){
+              optionLength = 269 + 256*packetBuffer[marker]; marker++;
+              optionLength += packetBuffer[marker]; marker++;
             }
 
             if(delta == 15) //Trafiono na marker payloadu
             {
               payloadFound = true;
-              payloadMarker = marker+1; //payload zaczyna sie po markerze, ktory ma bajt
+              payloadMarker = marker+1; //payload zaczyna sie po markerze, ktory ma 1 bajt
             }
             else //Jezeli nie bylo markera payloadu, mozna obsluzyc opcje bez przejmowania sie bledami
             {
               optionNumber+=delta; //numer opcji to nr poprzedniej+delta
+              
+              /*marker powinien w tym momencie wskazywac
+                na zawartosc opcji, tzn optionValue.
+                Pole to jest wielkosci optionLength. */
             }
             
           }
