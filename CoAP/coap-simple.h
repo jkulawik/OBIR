@@ -20,7 +20,7 @@ LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-Objasnienia w komentarzach po polsku dopisane przez zespol projektowy.
+Objasnienia w komentarzach po polsku dopisane przez zespol projektowy OBIR.
 */
 
 
@@ -29,8 +29,12 @@ Objasnienia w komentarzach po polsku dopisane przez zespol projektowy.
 #ifndef __SIMPLE_COAP_H__
 #define __SIMPLE_COAP_H__
 
-#include <functional>
-#include "Udp.h"
+//#include <functional>
+//#include "SmallFunctional.h"
+
+//#include "Udp.h" //Zamiana na wersje OBIR
+#include <ObirEthernetUdp.h>
+
 
 #ifndef COAP_MAX_CALLBACK
 #define COAP_MAX_CALLBACK 10
@@ -174,7 +178,7 @@ class CoapPacket {
 
 //Definicja szablonu funkcji typu CoapCallback.
 /*Szablon ten jest wielokrotnie uzywany do obslugi zdarzen roznych typow.*/
-typedef std::function<void(CoapPacket &, IPAddress, int)> CoapCallback;
+typedef obir::function<void(CoapPacket &, IPAddress, int)> CoapCallback;
 
 /*Klasa URI. 
 Jest slownikiem funkcji callback kluczowanych adresami URL.
@@ -226,7 +230,7 @@ class CoapUri {
 //Definicja klasy protokołu CoAP wraz z jej atrybutami
 class Coap {
     private:
-        UDP *_udp;
+        ObirEthernetUDP *_udp;
 		
 		//Obiekt przechowujacy wszysktie dostepne w wezle URI, oraz ich funkcje callback
         CoapUri uri;
@@ -244,7 +248,7 @@ class Coap {
 
     public:
         Coap(
-            UDP& udp
+            ObirEthernetUDP& udp
         );
 		
 		//Ustawia port CoAP na domyslny
@@ -277,5 +281,6 @@ class Coap {
 
         bool loop();
 };
+
 
 #endif

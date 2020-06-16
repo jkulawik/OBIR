@@ -35,13 +35,13 @@ class Numbers
     {
       nums[current_len] = num;
       current_len++;
-      BubbleSort();
+      void BubbleSort();
       return true;
     }
     else return false;
   }
 
-  BubbleSort() //mozna zmodyfikowac do Comb sort jezeli bedzie za wolny
+  void BubbleSort() //mozna zmodyfikowac do Comb sort jezeli bedzie za wolny
   {
     int i,j;
     bool swapped;

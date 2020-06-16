@@ -14,7 +14,7 @@ void CoapPacket::addOption(uint8_t number, uint8_t length, uint8_t *opt_payload)
 }
 
 //definicja konstruktora dla klasy protokołu CoAP
-Coap::Coap(UDP& udp)
+Coap::Coap(ObirEthernetUDP& udp)
 {
     this->_udp = &udp;
 }
@@ -158,9 +158,9 @@ uint16_t Coap::send(IPAddress ip, int port, const char *url, COAP_TYPE type, COA
     packet.messageid = rand(); //Uwaga; tu jest rand, czyli bedzie do poprawy
 
     //Dodaje adres nadawcy jako opcje URI_HOST 
-    char ipaddress[16] = "";
-    sprintf(ipaddress, "%d.%d.%d.%d", ip[0], ip[1], ip[2], ip[3]); //przepisanie adresu z obiektu IPAddress do tablicy znakow
-    packet.addOption(COAP_URI_HOST, strlen(ipaddress), (uint8_t *)ipaddress);
+    char IPAddress[16] = "";
+    sprintf(IPAddress, "%d.%d.%d.%d", ip[0], ip[1], ip[2], ip[3]); //przepisanie adresu z obiektu IPAddress do tablicy znakow
+    packet.addOption(COAP_URI_HOST, strlen(IPAddress), (uint8_t *)IPAddress);
 
 	//Dodawanie URL jako kolejnych opcji URI_PATH
     int idx = 0;
@@ -308,10 +308,10 @@ bool Coap::loop() {
                 }
             }
 
-            if (!uri.find(url)) {
+            if (!uri.find(url)) { //Jezeli nie znaleziono URI, wyslij COAP_NOT_FOUNT
                 sendResponse(_udp->remoteIP(), _udp->remotePort(), packet.messageid, NULL, 0,
                         COAP_NOT_FOUNT, COAP_NONE, NULL, 0);
-            } else {
+            } else { //W.p.p. znajdz callback dla uri i uzyj go
                 uri.find(url)(packet, _udp->remoteIP(), _udp->remotePort());
             }
         }
