@@ -3,7 +3,9 @@
 #include <ObirEthernetUdp.h>    //sama klasa 'ObirEthernetUDP'
 //#include "coap-simple.h"        //Biblioteka CoAP
 
-#define UDP_SERVER_PORT 5683 //najczesciej uzywany port
+#define UDP_SERVER_PORT 5683 /*najczesciej uzywany port*/
+
+#define HEADER_SIZE 4 /*Rozmiar naglowka w bajtach - oznacza pierwszy bit tokenu*/
 
 byte MAC[]={0x28, 0x16, 0xAD, 0x71, 0xB4, 0xA7}; //Adres MAC wykorzystanej karty sieciowej
 
@@ -52,13 +54,13 @@ void loop() {
     int packetSize=Udp.parsePacket(); 
     if(packetSize>0){
         //czytamy pakiet - maksymalnie do 'PACKET_BUFFER_LENGTH' bajtow
-        int len=Udp.read(packetBuffer, PACKET_BUFFER_LENGTH); //dlugosc pakietu
+        int packetLen=Udp.read(packetBuffer, PACKET_BUFFER_LENGTH); //dlugosc pakietu
         
         //if(len<=0) Udp.flush();return;     //nie ma danych - wywolujemy funkcje wymiecenia bufora
             
         //prezentujemy otrzymany pakiet (zakladajac ze zawiera znaki ASCII)
         Serial.println("\n\n+---Received a message---+");
-        packetBuffer[len]='\0';
+        packetBuffer[packetLen]='\0';
 
         /*---Interpretacja odebranego pakietu---*/
 
@@ -83,12 +85,12 @@ void loop() {
           Serial.print(F("Token length: ")); Serial.println(_token_len, DEC);
           //Zczytanie tokena:
           if(_token_len > 0) 
-          { 
+          {
             Serial.println(F("Token: "));
             for(int i = 0; i < _token_len; i++)
             {
-              _token[i] = packetBuffer[i+4];
-              /*przepisujemy bajty; 4 to potencjalna pozycja pierwszego bajtu tokena*/
+              _token[i] = packetBuffer[i + HEADER_SIZE];
+              /*przepisujemy bajty*/
               Serial.print(_token[i], HEX);Serial.print(F(" "));
             }
             Serial.println();
@@ -97,10 +99,77 @@ void loop() {
           Serial.print(F("Code: ")); Serial.print(_class, DEC); Serial.print(F(".0"));Serial.println(_code, DEC);
           Serial.print(F("Message ID: ")); Serial.println(_mid, DEC);
 
-          //TODO: opcje
+          /*---Koniec naglowka---*/
+
+
+          /*---Opcje---*/
+
+          bool payloadFound = false;
+          int marker = HEADER_SIZE + _token_len; //Znacznik polozenia w pakiecie (w bajtach)
+          int payloadMarker = -1; //Znacznik polozenia payloadu (w bajtach)
+          /*Ustawiony na -1, zeby wykryc blad*/
+
+          uint32_t delta; //Moze miec 4 bit + 2 bajty = 20 bit, ale uint24 nie istnieje
+          uint8_t optionLength;
+          uint8_t optionNumber = 0;
+          
+          while(!payloadFound) //!!!!!!!!!!!----------------->TODO: wszystko pod whilem jest do weryfikacji
+          {
+            delta = (packetBuffer[marker] & 0xF0) >> 4; //Maska na pierwsze 4 bity
+            optionLength = (packetBuffer[marker] & 0x0F) >> 4; //Maska na kolejne 4 bity
+            marker++; //przesuniecie markera na nastepny bajt
+
+            /*kiedy delta albo optionLen < 12, to jest brak rozszerzen; 
+              Bajt markera oznacza wtedy wartosc opcji */
+            
+            if(delta == 13)
+            {
+              //Jest 1 bajt rozszerzenia:
+              delta+= packetBuffer[marker];
+              marker++;
+            }
+
+            if(delta == 14)
+            {
+              //Sa 2 bajty rozszerzenia
+              //TODO: to moze nie byc konieczne, zalezy czy musimy obslugiwac opcje z duzym numerem
+              delta = 269 + 256*packetBuffer[marker]; //pierwszy bajt ma wieksza wage
+              marker++;
+              delta += packetBuffer[marker]; //dodajemy wartosc kolejnego bajtu
+              marker++;
+            }
+
+            if(optionLength == 13)
+            {
+              //Jest 1 bajt rozszerzenia:
+              optionLength += packetBuffer[marker];
+              marker++;
+            }
+
+            if(optionLength == 14)
+            {
+              //Sa 2 bajty rozszerzenia
+              optionLength = 269 + 256*packetBuffer[marker]; //pierwszy bajt ma wieksza wage
+              marker++;
+              optionLength += packetBuffer[marker]; //dodajemy wartosc kolejnego bajtu
+              marker++;
+            }
+
+            if(delta == 15) //Trafiono na marker payloadu
+            {
+              payloadFound = true;
+              payloadMarker = marker+1; //payload zaczyna sie po markerze, ktory ma bajt
+            }
+            else //Jezeli nie bylo markera payloadu, mozna obsluzyc opcje bez przejmowania sie bledami
+            {
+              optionNumber+=delta; //numer opcji to nr poprzedniej+delta
+            }
+            
+          }
+          
           //TODO: payload - moze wskaznik?
 
-        /*---Koniec naglowka---*/
+        /*---Koniec opcji---*/
         
         /*---Koniec obieranego pakietu; Odpowiadanie---*/
           if(_class == 0)
