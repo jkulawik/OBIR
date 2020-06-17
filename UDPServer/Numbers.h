@@ -13,18 +13,16 @@ Kod ten to m.in:
 */
 
 #define MAX_NUMBERS 5 //Rozmiar bufora przechowywanych liczb
+#define ETAG_MAX_SIZE 2 //Patrz: dokumentacja
 
 class Numbers
 {
   public:
   int nums[MAX_NUMBERS];
-  int current_len;
+  int current_len = 0;
 
-  /*Konstruktor domyslny*/
-  Numbers()
-  {
-    current_len = 0;
-  }
+  /*Konstruktor domyslny; jedyne co robi to ust. */
+  Numbers() {} 
   
   /*Dodaje numer do zbioru.
   Zwraca false jezeli zbior jest pelny.
@@ -39,6 +37,11 @@ class Numbers
       return true;
     }
     else return false;
+  }
+
+  int getMedian() //Metryka 1/3
+  {
+    
   }
 
   void BubbleSort() //mozna zmodyfikowac do Comb sort jezeli bedzie za wolny

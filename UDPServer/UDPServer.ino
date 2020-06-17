@@ -6,6 +6,9 @@
 #define UDP_SERVER_PORT 5683 /*najczesciej uzywany port*/
 
 #define HEADER_SIZE 4 /*Rozmiar naglowka w bajtach - oznacza pierwszy bit tokenu*/
+#define ETAG_MAX_SIZE 2 /*Rozmiar obslugiwanego ETag w bajtach - patrz: dokumentacja*/
+
+enum ETagStatus {NO_ETAG, VALID, INVALID};
 
 byte MAC[]={0x28, 0x16, 0xAD, 0x71, 0xB4, 0xA7}; //Adres MAC wykorzystanej karty sieciowej
 
@@ -66,8 +69,8 @@ void loop() {
 
         /*---Interpretacja naglowka---*/
 
-        uint8_t _version = (0xC0 & packetBuffer[0])>>6;
-        Serial.print(F("CoAP version: "));Serial.println(_version, DEC);
+        uint8_t _version = (0xC0 & packetBuffer[0])>>6; 
+        Serial.print(F("CoAP version: "));Serial.println(_version, DEC); //Tego tak naprawde nie potrzebujemy
         
         uint8_t _type = (0x30 & packetBuffer[0])>>4;              //1=NON, 0=CON
         if(_type==0)Serial.println(F("Type: CON"));
@@ -113,9 +116,16 @@ void loop() {
           uint8_t optionLength;
           uint8_t optionNumber = 0;
 
+          /*W celu oddzielenia odczytywania wiadomosci od wysylania odpowiedzi, 
+          kazda obslugiwana opcja musi tez miec status, lub swoja wartoscia
+          poczatkowa status ten odwzorowac*/
+          uint8_t eTag[ETAG_MAX_SIZE]; //patrz: dokumentacja
+          enum ETagStatus _eTagStatus = NO_ETAG;
           
+          uint16_t contentFormat;
+          String uriPath = "NULL"; //init zeby mozna bylo sprawdzic, czy URI w ogole byl obecny
           
-          while(!payloadFound) //!!!!!!!!!!!----------------->TODO: wszystko pod whilem jest do weryfikacji
+          while(!payloadFound) //!!!!!!!!!!!----------------->TODO: wszystko pod whilem jest do przetestowania
           {
             delta = (packetBuffer[marker] & 0xF0) >> 4; //Maska na pierwsze 4 bity
             optionLength = (packetBuffer[marker] & 0x0F) >> 4; //Maska na kolejne 4 bity
@@ -162,25 +172,35 @@ void loop() {
 
               //Opcje do obsluzenia podczas odbierania:
 
-              if(optionNumber == 4)//Etag
+              if(optionNumber == 11)
+              /*URI-path - obslugiwane najpierw, zeby korzystac z niego potem*/
               {
                 
               }
 
-              if(optionNumber == 11)//URI-path
+              if(optionNumber == 17)
+              /*Accept - czyli jaka reprezentacje woli klient
+              Potrzebna przy wysylaniu, wiec obslugiwana przed ETag*/
               {
+                
+              }
+
+              if(optionNumber == 4)//Etag
+              {
+                //Obslugiwane sa tylko 2 bajty etag - patrz: dokumentacja
+                
+                if(optionLength > 1) eTag[1] = packetBuffer[marker++]; //uwaga na postinkrementacje
+                else if(optionLength == 2) eTag[2] = packetBuffer[marker++];
+                else 1+1; //TODO: tu nalezy wyslac blad - jezeli ETag jest wiekszy niz 2B, to wiemy ze nie jest poprawny
+
                 
               }
               
-              if(optionNumber == 12)//content-format - to chyba raczej do odpowiedzi
+              if(optionNumber == 12)//content-format - to chyba raczej do odpowiedzi, potencjalnie do wywalenia
               {
                 
               }
 
-              if(optionNumber == 17)//accept - czyli jaka reprezentacje woli klient
-              {
-                
-              }
             }
 
             //Tu obsluga payloadu
