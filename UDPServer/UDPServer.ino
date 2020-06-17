@@ -112,6 +112,8 @@ void loop() {
           uint32_t delta; //Moze miec 4 bit + 2 bajty = 20 bit, ale uint24 nie istnieje
           uint8_t optionLength;
           uint8_t optionNumber = 0;
+
+          
           
           while(!payloadFound) //!!!!!!!!!!!----------------->TODO: wszystko pod whilem jest do weryfikacji
           {
@@ -127,8 +129,7 @@ void loop() {
               delta+= packetBuffer[marker];
               ++marker;
             }
-
-            if(delta == 14){
+            else if(delta == 14){
               //Sa 2 bajty rozszerzenia
               //TODO: to moze nie byc konieczne, zalezy czy musimy obslugiwac opcje z duzym numerem
               delta = 269 + 256*packetBuffer[marker]; //pierwszy bajt ma wieksza wage
@@ -137,11 +138,11 @@ void loop() {
               ++marker;
             }
 
-            //Opcje w analogiczny sposob:
+            //Dlugosc opcji w analogiczny sposob:
             if(optionLength == 13){
               optionLength += packetBuffer[marker]; ++marker; 
             }
-            if(optionLength == 14){
+            else if(optionLength == 14){
               optionLength = 269 + 256*packetBuffer[marker]; ++marker;
               optionLength += packetBuffer[marker]; ++marker;
             }
@@ -153,16 +154,38 @@ void loop() {
             }
             else //Jezeli nie bylo markera payloadu, mozna obsluzyc opcje bez przejmowania sie bledami
             {
-              optionNumber+=delta; //numer opcji to nr poprzedniej+delta
+              optionNumber+=delta; //Numer opcji to nr poprzedniej+delta
               
-              /*marker powinien w tym momencie wskazywac
+              /*Marker powinien w tym momencie wskazywac
                 na zawartosc opcji, tzn optionValue.
                 Pole to jest wielkosci optionLength. */
+
+              //Opcje do obsluzenia podczas odbierania:
+
+              if(optionNumber == 4)//Etag
+              {
+                
+              }
+
+              if(optionNumber == 11)//URI-path
+              {
+                
+              }
+              
+              if(optionNumber == 12)//content-format - to chyba raczej do odpowiedzi
+              {
+                
+              }
+
+              if(optionNumber == 17)//accept - czyli jaka reprezentacje woli klient
+              {
+                
+              }
             }
+
+            //Tu obsluga payloadu
             
           }
-          
-          //TODO: payload - moze wskaznik?
 
         /*---Koniec opcji---*/
         
