@@ -182,7 +182,10 @@ void loop() {
               /*Accept - czyli jaka reprezentacje woli klient
               Potrzebna przy wysylaniu, wiec obslugiwana przed ETag*/
               {
-                
+                //0 - plain text
+                //40 - application/link-format
+                //reszta raczej nas nie obchodzi
+                //rozmiar moze byc do 2B, ale tak naprawde wystarczy sprawdzic 1
               }
 
               if(optionNumber == 4)//Etag
@@ -203,12 +206,7 @@ void loop() {
               {
                 
               }
-
             }
-
-            //Tu obsluga payloadu
-            //przypomnienie, payload jest na pozycji payloadMarker w pakiecie
-            
           }
 
         /*---1.2.E Koniec odczytu opcji---*/
@@ -216,6 +214,9 @@ void loop() {
         /*---1.E Koniec obieranego pakietu---*/
         
         /*---2.S Odpowiadanie---*/
+
+          //Obsluga payloadu:
+          //payload zaczyna sie na pozycji payloadMarker w pakiecie (packetBuffer)
         
           if(_class == 0)
           {
