@@ -157,6 +157,8 @@ void loop() {
               optionLength += packetBuffer[marker]; ++marker;
             }
 
+            Serial.print(F("Option Length: "));Serial.print(optionLength, DEC);
+
             if(delta == 15) //Trafiono na marker payloadu
             {
               payloadFound = true;
@@ -173,15 +175,16 @@ void loop() {
               //Opcje do obsluzenia podczas odbierania:
 
               if(optionNumber == 11)
-              /*URI-path - obslugiwane najpierw, zeby korzystac z niego potem*/
+              /*URI-path*/
               {
-                
+                Serial.println(F("Opcja URI-Path"));
               }
 
               if(optionNumber == 17)
-              /*Accept - czyli jaka reprezentacje woli klient
-              Potrzebna przy wysylaniu, wiec obslugiwana przed ETag*/
+              /*Accept - czyli jaka reprezentacje woli klient*/
               {
+                Serial.println(F("Opcja Accept"));
+
                 //0 - plain text
                 //40 - application/link-format
                 //reszta raczej nas nie obchodzi
@@ -190,21 +193,26 @@ void loop() {
 
               if(optionNumber == 4)//Etag
               {
+                Serial.println(F("Opcja ETag"));
                 //Obslugiwane sa tylko 2 bajty etag - patrz: dokumentacja
                 if(optionLength == 2)
                 {
                   eTag[1] = packetBuffer[marker]; ++marker;
                   eTag[2] = packetBuffer[marker]; ++marker;
                   _eTagStatus = VALID;
+                  Serial.print(F("ETag: 0x"));Serial.print(eTag[1], HEX); Serial.println(eTag[2], HEX);
                 }
-                else _eTagStatus = INVALID; 
+                else{
+                  _eTagStatus = INVALID;
+                  Serial.println(F("Invalid ETag")); 
+                }
                 /* Jezeli dl. nierowna 2, od razu wiemy ze zasob nie bedzie mial zgodnego ETag.
                    Informacje na temat ETag juz mamy; ich obsluga bedzie oddzielnie, dalej   */
               }
               
               if(optionNumber == 12)//content-format - to chyba raczej do odpowiedzi. Potencjalnie do wywalenia
               {
-                
+                Serial.println(F("Opcja Content-Format"));
               }
             }
           }
