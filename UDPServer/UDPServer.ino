@@ -65,9 +65,9 @@ void loop() {
         Serial.println("\n\n+---Received a message---+");
         packetBuffer[packetLen]='\0';
 
-        /*---Interpretacja odebranego pakietu---*/
+        /*---1.S Interpretacja odebranego pakietu---*/
 
-        /*---Interpretacja naglowka---*/
+        /*---1.1.S Interpretacja naglowka---*/
 
         uint8_t _version = (0xC0 & packetBuffer[0])>>6; 
         Serial.print(F("CoAP version: "));Serial.println(_version, DEC); //Tego tak naprawde nie potrzebujemy
@@ -102,10 +102,10 @@ void loop() {
           Serial.print(F("Code: ")); Serial.print(_class, DEC); Serial.print(F(".0"));Serial.println(_code, DEC);
           Serial.print(F("Message ID: ")); Serial.println(_mid, DEC);
 
-          /*---Koniec naglowka---*/
+          /*---1.1.E Koniec naglowka---*/
 
 
-          /*---Opcje---*/
+          /*---1.2.S Opcje---*/
 
           bool payloadFound = false;
           int marker = HEADER_SIZE + _token_len; //Znacznik polozenia w pakiecie (w bajtach)
@@ -148,7 +148,7 @@ void loop() {
               ++marker;
             }
 
-            //Dlugosc opcji w analogiczny sposob:
+            //Dlugosc opcji w analogiczny sposob.
             if(optionLength == 13){
               optionLength += packetBuffer[marker]; ++marker; 
             }
@@ -188,15 +188,18 @@ void loop() {
               if(optionNumber == 4)//Etag
               {
                 //Obslugiwane sa tylko 2 bajty etag - patrz: dokumentacja
-                
-                if(optionLength > 1) eTag[1] = packetBuffer[marker++]; //uwaga na postinkrementacje
-                else if(optionLength == 2) eTag[2] = packetBuffer[marker++];
-                else 1+1; //TODO: tu nalezy wyslac blad - jezeli ETag jest wiekszy niz 2B, to wiemy ze nie jest poprawny
-
-                
+                if(optionLength == 2)
+                {
+                  eTag[1] = packetBuffer[marker]; ++marker;
+                  eTag[2] = packetBuffer[marker]; ++marker;
+                  _eTagStatus = VALID;
+                }
+                else _eTagStatus = INVALID; 
+                /* Jezeli dl. nierowna 2, od razu wiemy ze zasob nie bedzie mial zgodnego ETag.
+                   Informacje na temat ETag juz mamy; ich obsluga bedzie oddzielnie, dalej   */
               }
               
-              if(optionNumber == 12)//content-format - to chyba raczej do odpowiedzi, potencjalnie do wywalenia
+              if(optionNumber == 12)//content-format - to chyba raczej do odpowiedzi. Potencjalnie do wywalenia
               {
                 
               }
@@ -204,12 +207,16 @@ void loop() {
             }
 
             //Tu obsluga payloadu
+            //przypomnienie, payload jest na pozycji payloadMarker w pakiecie
             
           }
 
-        /*---Koniec opcji---*/
+        /*---1.2.E Koniec odczytu opcji---*/
         
-        /*---Koniec obieranego pakietu; Odpowiadanie---*/
+        /*---1.E Koniec obieranego pakietu---*/
+        
+        /*---2.S Odpowiadanie---*/
+        
           if(_class == 0)
           {
             //1+1; jako wypelniacz, do usuniecia
@@ -226,6 +233,9 @@ void loop() {
             }
 
           }
+          
+         /*---2.E koniec odpowiadania---*/
+         
         }
     }
 }
