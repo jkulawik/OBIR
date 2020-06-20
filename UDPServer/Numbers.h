@@ -14,6 +14,7 @@ Kod ten to m.in:
 
 #define MAX_NUMBERS 5 //Rozmiar bufora przechowywanych liczb
 #define ETAG_MAX_SIZE 2 //Patrz: dokumentacja
+#include <math.h>
 
 class Numbers
 {
@@ -39,9 +40,44 @@ class Numbers
     else return false;
   }
 
-  int getMedian() //Metryka 1/3
+  float getMedian() //Metryka 1/3
   {
-    
+    if(current_len!=0)
+    {
+      if(current_len%2==0)
+        return float((nums[current_len/2]+nums[(current_len+1)/2])/2);
+      else return nums[current_len-1/2];
+    }
+    else return 0;
+  }
+
+  float getAverage() //Metryka 2/3
+  {
+    if(current_len!=0)
+    {
+      int sum=0;
+      for(int i=0; i<current_len; i++)
+        sum+=nums[i];
+      return float(sum/current_len);
+    }
+    else return 0;
+  }
+
+  float getStandardDeviation() //Metryka 3/3
+  {
+    float avg=getAverage();
+    if(avg!=0)
+    {
+      float sum=0;
+      for(int i=0; i<current_len; i++)
+        sum+=(nums[i]-avg)*(nums[i]-avg);
+      sum/=(current_len-1);
+      return sqrt(sum);
+      /*Bardziej wyszukane algorytmy pierwiastkowania if we fancy:
+       https://www.codeproject.com/Articles/69941/Best-Square-Root-Method-Algorithm-Function-Precisi
+      */
+    }
+    else return 0;
   }
 
   void BubbleSort() //mozna zmodyfikowac do Comb sort jezeli bedzie za wolny
