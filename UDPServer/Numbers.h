@@ -21,6 +21,7 @@ class Numbers
   public:
   int nums[MAX_NUMBERS];
   int current_len = 0;
+  float median = 0, average = 0, deviation = 0;
 
   /*Konstruktor domyslny; jedyne co robi to ust. */
   Numbers() {} 
@@ -35,50 +36,43 @@ class Numbers
       nums[current_len] = num;
       ++current_len;
       void BubbleSort();
+      
+      //Metryka 1/3 - mediana
+      if(current_len%2==0)
+        median = float((nums[current_len/2]+nums[(current_len+1)/2])/2);
+      else median = nums[current_len-1/2];
+      
+      //Metryka 2/3 - srednia
+      int sum = 0;
+      for(int i=0; i<current_len; i++)
+        sum += nums[i];
+      average = float(sum/current_len);
+      
+      //Metryka 3/3 - odchylenie standardowe
+      if(average!=0)
+      {
+      float sum=0;
+      for(int i=0; i<current_len; i++)
+        sum += (nums[i]-average)*(nums[i]-average);
+      sum /= (current_len-1);
+      deviation = sqrt(sum);
+      /*Bardziej wyszukane algorytmy pierwiastkowania if we fancy:
+       https://www.codeproject.com/Articles/69941/Best-Square-Root-Method-Algorithm-Function-Precisi
+      */
+      }
       return true;
     }
     else return false;
   }
 
-  float getMedian() //Metryka 1/3
-  {
-    if(current_len!=0)
-    {
-      if(current_len%2==0)
-        return float((nums[current_len/2]+nums[(current_len+1)/2])/2);
-      else return nums[current_len-1/2];
-    }
-    else return 0;
-  }
+  //Metryka 1/3
+  float getMedian() {return median;}
+  
+  //Metryka 2/3
+  float getAverage() {return average;}
 
-  float getAverage() //Metryka 2/3
-  {
-    if(current_len!=0)
-    {
-      int sum=0;
-      for(int i=0; i<current_len; i++)
-        sum+=nums[i];
-      return float(sum/current_len);
-    }
-    else return 0;
-  }
-
-  float getStandardDeviation() //Metryka 3/3
-  {
-    float avg=getAverage();
-    if(avg!=0)
-    {
-      float sum=0;
-      for(int i=0; i<current_len; i++)
-        sum+=(nums[i]-avg)*(nums[i]-avg);
-      sum/=(current_len-1);
-      return sqrt(sum);
-      /*Bardziej wyszukane algorytmy pierwiastkowania if we fancy:
-       https://www.codeproject.com/Articles/69941/Best-Square-Root-Method-Algorithm-Function-Precisi
-      */
-    }
-    else return 0;
-  }
+  //Metryka 3/3
+  float getStandardDeviation() {return deviation;}
 
   void BubbleSort() //mozna zmodyfikowac do Comb sort jezeli bedzie za wolny
   {

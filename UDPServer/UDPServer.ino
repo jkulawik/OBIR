@@ -7,6 +7,7 @@
 
 #define HEADER_SIZE 4 /*Rozmiar naglowka w bajtach - oznacza pierwszy bit tokenu*/
 #define ETAG_MAX_SIZE 2 /*Rozmiar obslugiwanego ETag w bajtach - patrz: dokumentacja*/
+#define URIPATH_MAX_SIZE 4 /*Rozmiar URI-Path w bajtach - wskazanie zasobu*/
 
 enum ETagStatus {NO_ETAG, VALID, INVALID};
 
@@ -31,6 +32,7 @@ Numbers Numbers;
            Liczba przechowywanych liczb jest okreslana w powyzszym pliku.
 */   
 
+#include "Conversions.h"
 #include "coap-interpreter.h"
 
 void setup() {
@@ -123,6 +125,7 @@ void loop() {
           enum ETagStatus _eTagStatus = NO_ETAG;
           
           uint16_t contentFormat;
+          uint8_t _uriPath[URIPATH_MAX_SIZE];
           String uriPath = "NULL"; //init zeby mozna bylo sprawdzic, czy URI w ogole byl obecny
           
           while(!payloadFound) //!!!!!!!!!!!----------------->TODO: wszystko pod whilem jest do przetestowania
@@ -178,12 +181,28 @@ void loop() {
               /*URI-path*/
               {
                 Serial.println(F("Opcja URI-Path"));
+                if(uriPath == "NULL")
+                {
+                  for(int i=0; i<optionLength; i++)
+                    _uriPath[i] = packetBuffer[marker]; ++marker;
+                  ArrayToString(uriPath,_uriPath, URIPATH_MAX_SIZE);
+                }
+                Serial.println(F("URI-Path: ")); Serial.println(uriPath);
               }
 
               if(optionNumber == 17)
               /*Accept - czyli jaka reprezentacje woli klient*/
               {
                 Serial.println(F("Opcja Accept"));
+                contentFormat = packetBuffer[marker]; ++marker;
+                if(optionLength==2) ++marker;
+                Serial.println(F("Chosen content format: ")); 
+                if(contentFormat==0)
+                  Serial.println(F("plain text");
+                else if(contentFormat==40)
+                  Serial.println(F("application/link-format"));
+                else
+                  Serial.println(F("not supported"));
 
                 //0 - plain text
                 //40 - application/link-format

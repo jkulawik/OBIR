@@ -4,8 +4,8 @@
 Zbior funkcji konwertujacych.
 Zawartosc:
 * ArrayToString - zamiana tablicy znakow na obiekt String
-* AnyBaseAsciiToInt - sumuje ASCII do int. Sluzy do konwersji z hex, oct, etc. na zmienne int
 * pow_int - potegowanie liczb calkowitych
+* AnyBaseAsciiToInt - sumuje ASCII do int. Sluzy do konwersji z hex, oct, etc. na zmienne int
 
 */
 
@@ -14,6 +14,26 @@ void ArrayToString(String asData,char aszMessage[], int alSize)
 {
   asData = ""; //zerujemy dane
   for(int j=0; j<alSize; j++) asData += (char) aszMessage[j];
+}
+
+/*Zrodlo algorytmu potegowania:
+https://stackoverflow.com/questions/101439/the-most-efficient-way-to-implement-an-integer-based-power-function-powint-int
+Funkcja potrzebna do zamiany ASCII na int 
+*/
+unsigned long pow_int(unsigned long base, int exp)
+{
+    unsigned long powresult = 1;
+    for (;;)
+    {
+        if (exp & 1)
+            powresult *= base;
+        exp >>= 1;
+        if (!exp)
+            break;
+        base *= base;
+    }
+
+    return powresult;
 }
 
 //Funkcja zamienia ciag znakow typu string na int o dowolnej podstawie (hex, oct...)
@@ -43,25 +63,4 @@ unsigned long AnyBaseAsciiToInt(int alBase, String strData)
     else Serial.println(F("Skipping non-alphanumeric character"));
   }  
   return localresult;
-}
-
-
-/*Zrodlo algorytmu potegowania:
-https://stackoverflow.com/questions/101439/the-most-efficient-way-to-implement-an-integer-based-power-function-powint-int
-Funkcja potrzebna do zamiany ASCII na int 
-*/
-unsigned long pow_int(unsigned long base, int exp)
-{
-    unsigned long powresult = 1;
-    for (;;)
-    {
-        if (exp & 1)
-            powresult *= base;
-        exp >>= 1;
-        if (!exp)
-            break;
-        base *= base;
-    }
-
-    return powresult;
 }
