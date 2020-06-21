@@ -42,6 +42,8 @@ Numbers Numbers;
 #include "Conversions.h"
 #include "coap-interpreter.h"
 
+#include "CoapPacket.h"
+
 void setup() {
     //Zwyczajowe przywitanie z userem (niech wie ze system sie uruchomil poprawnie)
     Serial.begin(115200);
