@@ -16,6 +16,9 @@ Kod ten to m.in:
 #define ETAG_MAX_SIZE 2 //Patrz: dokumentacja
 #include <math.h>
 
+//Makro do generacji losowego bajta:
+#define hexRAND random(0xFF)
+
 class Numbers
 {
   public:
@@ -25,6 +28,22 @@ class Numbers
 
   /*Konstruktor domyslny*/
   Numbers() {} 
+
+//Tablica to ETagow. Objasnienie w tabeli ponizej
+  uint8_t eTags [2][5] = {
+    {0x11, 0x12, 0x13, 0x21, 0x22},
+    {hexRAND,hexRAND,hexRAND,hexRAND,hexRAND}
+    };
+/*   rzad^  ^kolumna  */ 
+/*
++--------------+---------+------+---------+-----------+---------+
+|     Name:    | AVERAGE | MEAN | STD_DEV | DIVIDIBLE | NUMBERS |
++--------------+---------+------+---------+-----------+---------+
+| Resource ID: | 0x11    | 0x12 | 0x13    | 0x21      | 0x22    |
+| Tag:         | rand    | rand | rand    | rand      | rand    |
++--------------+---------+------+---------+-----------+---------+ 
+ */
+
   
   /*AddNum - Dodaje numer do zbioru.
   Zwraca false jezeli zbior jest pelny.
@@ -41,6 +60,9 @@ class Numbers
       countMedian();      
       countAverage();
       countDeviation();
+
+      //updateDivTag
+      //updateNumsTag
 
       return true;
     }
