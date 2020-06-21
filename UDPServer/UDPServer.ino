@@ -247,10 +247,10 @@ void loop() {
                 //Obslugiwane sa tylko 2 bajty etag - patrz: dokumentacja
                 if(optionLength == 2)
                 {
+                  eTag[0] = packetBuffer[marker]; ++marker;
                   eTag[1] = packetBuffer[marker]; ++marker;
-                  eTag[2] = packetBuffer[marker]; ++marker;
                   _eTagStatus = VALID;
-                  Serial.print(F("ETag: 0x"));Serial.print(eTag[1], HEX); Serial.println(eTag[2], HEX);
+                  Serial.print(F("ETag: 0x"));Serial.print(eTag[0], HEX); Serial.println(eTag[1], HEX);
                 }
                 else{
                   _eTagStatus = INVALID;
@@ -289,6 +289,8 @@ void loop() {
                 uint8_t second_hex_fresh = 0x00; //Tu w fcji checkETag bedzie wpisany aktualny drugi bajt ETaga
                 if( Numbers.checkETag(eTag[0], second_hex_fresh) ) 
                 {
+                  Serial.print(F("Correct ETag: 0x"));Serial.print(eTag[0], HEX); Serial.println(second_hex_fresh, HEX); //Debug
+                  
                   Serial.println(F("ETag matches an existing resource."));
                   if( eTag[1] == second_hex_fresh ) //porownujemy otrzmany bajt 2 z naszym
                   {
