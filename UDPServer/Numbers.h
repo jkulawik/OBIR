@@ -37,12 +37,12 @@ class Numbers
     };
 
 /*
-+--------------+---------+------+---------+-----------+---------+
-|     Name:    | AVERAGE | MEAN | STD_DEV | DIVIDIBLE | NUMBERS |
-+--------------+---------+------+---------+-----------+---------+
-| Resource ID: | 0x11    | 0x12 | 0x13    | 0x21      | 0x22    |
-| Tag:         | rand    | rand | rand    | rand      | rand    |
-+--------------+---------+------+---------+-----------+---------+ 
++------------------+-------------+----------+-------------+---------------+-------------+
+| Column num: Name | 0 = AVERAGE | 1 = MEAN | 2 = STD_DEV | 3 = DIVIDIBLE | 4 = NUMBERS |
++------------------+-------------+----------+-------------+---------------+-------------+
+| 0 = Resource ID: | 0x11        | 0x12     | 0x13        | 0x21          | 0x22        |
+| 1 = Tag:         | rand        | rand     | rand        | rand          | rand        |
++------------------+-------------+----------+-------------+---------------+-------------+
  */
 
   bool checkETag(uint8_t id, uint8_t &tag) 
@@ -52,9 +52,9 @@ class Numbers
   {
     for(int i = 0; i < 5; ++i)
     {
-      if(id == eTags[1][i])
+      if(id == eTags[0][i])
       {
-        tag = eTags[2][i];
+        tag = eTags[1][i];
         return true;
       }
     }
@@ -77,8 +77,8 @@ class Numbers
       countAverage();
       countDeviation();
 
-      //updateDivTag
-      //updateNumsTag
+      eTags[1][3] == hexRAND; //update Div ETag
+      eTags[1][4] == hexRAND; //update Numbers ETag
 
       return true;
     }
@@ -92,6 +92,8 @@ class Numbers
     if(current_len%2==0)
       median = float((nums[current_len/2]+nums[current_len/2 + 1])/2);
     else median = nums[current_len-1/2];
+
+    eTags[1][1] == hexRAND; //update Mean ETag
   }
   
   
@@ -104,6 +106,8 @@ class Numbers
     for(int i=0; i<current_len; i++)
         sum += nums[i];
     average = float(sum/current_len);
+
+    eTags[1][0] == hexRAND; //update Avg ETag
   }
 
   //Metryka 3/3 - odchylenie standardowe
@@ -120,6 +124,8 @@ class Numbers
       /*Bardziej wyszukane algorytmy pierwiastkowania if we fancy:
        https://www.codeproject.com/Articles/69941/Best-Square-Root-Method-Algorithm-Function-Precisi
       */
+
+      eTags[1][2] == hexRAND; //update std-deviation ETag
     }
   }
 

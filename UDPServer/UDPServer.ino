@@ -7,7 +7,7 @@
 
 #define HEADER_SIZE 4 /*Rozmiar naglowka w bajtach - oznacza pierwszy bit tokenu*/
 #define ETAG_MAX_SIZE 2 /*Rozmiar obslugiwanego ETag w bajtach - patrz: dokumentacja*/
-#define URIPATH_MAX_SIZE 255 /*Rozmiar URI-Path w bajtach - wskazanie zasobu*/
+#define URIPATH_MAX_SIZE 255 /*max. rozmiar URI-Path w bajtach - wskazanie zasobu*/
 
 //Sciezki do zasobow
 #define AVERAGE "/metrics/average"
@@ -286,11 +286,11 @@ void loop() {
             {
               if(_eTagStatus == VALID) //Sprawdzenie, czy ETag w ogole zostal nadany
               {
-                uint8_t second_hex_fresh = 0x00; //Tu bedzie wpisany aktualny drugi bajt ETaga
-                if( checkETag(eTag[1], second_hex_fresh) ) 
+                uint8_t second_hex_fresh = 0x00; //Tu w fcji checkETag bedzie wpisany aktualny drugi bajt ETaga
+                if( Numbers.checkETag(eTag[0], second_hex_fresh) ) 
                 {
                   Serial.println(F("ETag matches an existing resource."));
-                  if( eTag[2] == second_hex_fresh ) //porownujemy otrzmany bajt 2 z naszym
+                  if( eTag[1] == second_hex_fresh ) //porownujemy otrzmany bajt 2 z naszym
                   {
                     Serial.println(F("ETag is fresh."));
                     //Wyslac 2.03 z aktualnym ETagiem
@@ -298,7 +298,15 @@ void loop() {
                   else
                   {
                     Serial.println(F("ETag is outdated."));
-                    //Wyslac 2.05 z aktualnym ETagiem i 
+                    //Wyslac 2.05 z aktualnym ETagiem i zawartoscia - tylko najpierw trzeba wiedziec jaka:
+                    
+                    String resourceByEtag = ""; //To bedzie sciezka, ktorej chcial klient
+                    
+                         if(eTag[0] = 0x11) resourceByEtag = AVERAGE; //Hexy z tabeli z Numbers.h
+                    else if(eTag[0] = 0x12) resourceByEtag = MEAN;
+                    else if(eTag[0] = 0x13) resourceByEtag = STD_DEV;
+                    else if(eTag[0] = 0x21) resourceByEtag = DIVIDIBLE;
+                    else if(eTag[0] = 0x22) resourceByEtag = NUMBERS;
                   }
                    
                 }
@@ -307,10 +315,6 @@ void loop() {
                   Serial.println(F("Bad ETag, couldn't map to existing resources' ETags"));
                   //wyslac blad
                 }
-              }
-              else
-              {
-                //wyslac 2.05 z zasobem i nowym ETagiem
               }
               
               
