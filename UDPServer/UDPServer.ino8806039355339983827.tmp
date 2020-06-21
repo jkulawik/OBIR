@@ -7,7 +7,7 @@
 
 #define HEADER_SIZE 4 /*Rozmiar naglowka w bajtach - oznacza pierwszy bit tokenu*/
 #define ETAG_MAX_SIZE 2 /*Rozmiar obslugiwanego ETag w bajtach - patrz: dokumentacja*/
-#define URIPATH_MAX_SIZE 255 /*Rozmiar URI-Path w bajtach - wskazanie zasobu*/
+#define URIPATH_MAX_SIZE 4 /*Rozmiar URI-Path w bajtach - wskazanie zasobu*/
 
 //#define
 
@@ -130,10 +130,10 @@ void loop() {
           uint8_t _uriPath[URIPATH_MAX_SIZE]; //Tablica na znaki w postaci liczb
           String uriPath = "NULL"; //wl. URI; zaczyna od "NULL" zeby mozna bylo sprawdzic, czy URI w ogole byl obecny
           
-          while(!payloadFound && packetBuffer[marker]!='\0' ) //Dopoki nie znajdzie sie payload albo nie skonczy ramka
+          while(!payloadFound && packetBuffer[marker]!='\0' ) //!!!!!!!!!!!----------------->TODO: wszystko pod whilem jest do przetestowania
           {
             delta = (packetBuffer[marker] & 0xF0) >> 4; //Maska na pierwsze 4 bity
-            optionLength = (packetBuffer[marker] & 0x0F); //Maska na kolejne 4 bity
+            optionLength = (packetBuffer[marker] & 0x0F) >> 4; //Maska na kolejne 4 bity
             ++marker; //przesuniecie markera na nastepny bajt
 
             /*kiedy delta albo optionLength < 12, to jest brak rozszerzen; 
@@ -144,7 +144,7 @@ void loop() {
               delta+= packetBuffer[marker];
               ++marker;
             }
-            else if(delta == 14){
+            if(delta == 14){
               //Sa 2 bajty rozszerzenia
               //TODO: to moze nie byc konieczne, zalezy czy musimy obslugiwac opcje z duzym numerem
               delta = 269 + 256*packetBuffer[marker]; //pierwszy bajt ma wieksza wage
@@ -152,14 +152,14 @@ void loop() {
               delta += packetBuffer[marker]; //dodajemy wartosc kolejnego bajtu
               ++marker;
             }
-            else if(delta == 15) //Trafiono na marker payloadu
+
+            if(delta == 15) //Trafiono na marker payloadu
             {
               payloadFound = true;
               payloadMarker = marker+1; //payload zaczyna sie po markerze, ktory ma 1 bajt
               Serial.println(F("Payload reached"));
             }
-            
-            if(delta != 15) //Jezeli nie bylo markera payloadu, mozna obsluzyc opcje bez przejmowania sie bledami
+            else //Jezeli nie bylo markera payloadu, mozna obsluzyc opcje bez przejmowania sie bledami
             {
 
               //Dlugosc opcji w analogiczny sposob do delty.
@@ -183,22 +183,19 @@ void loop() {
               Serial.print(F(", Option number: "));Serial.print(optionNumber, DEC);
               Serial.print(F(", Option Length: "));Serial.println(optionLength, DEC);
               
-              if(optionNumber == 11)
+ /*             if(optionNumber == 11)
               //URI-path
               {
                 Serial.println(F("Opcja URI-Path"));
                 if(uriPath == "NULL")
                 {
-                  for(int i=0; i<optionLength; ++i)
-                  {
-                    _uriPath[i] = packetBuffer[marker]; 
-                    ++marker;
-                  }
-                  ArrayToString(uriPath, _uriPath, optionLength);
+                  for(int i=0; i<optionLength; i++)
+                    _uriPath[i] = packetBuffer[marker]; ++marker;
+                  ArrayToString(uriPath,_uriPath, URIPATH_MAX_SIZE);
                 }
                 Serial.print(F("URI-Path: ")); Serial.println(uriPath);
               }
-
+*/
 /*
               if(optionNumber == 17)
               //Accept - czyli jaka reprezentacje woli klient

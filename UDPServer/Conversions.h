@@ -10,7 +10,7 @@ Zawartosc:
 */
 
 //wpisuje zawartosc aszMessage do String asData
-void ArrayToString(String asData,char aszMessage[], int alSize)
+void ArrayToString(String &asData, uint8_t aszMessage[], int alSize)
 {
   asData = ""; //zerujemy dane
   for(int j=0; j<alSize; j++) asData += (char) aszMessage[j];
