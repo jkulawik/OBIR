@@ -126,7 +126,7 @@ void loop() {
           uint8_t eTag[ETAG_MAX_SIZE]; //patrz: dokumentacja
           enum ETagStatus _eTagStatus = NO_ETAG;
           
-          uint16_t contentFormat;
+          uint16_t contentFormat = 0x0000;
           uint8_t _uriPath[URIPATH_MAX_SIZE]; //Tablica na znaki w postaci liczb
           String uriPath = "NULL"; //wl. URI; zaczyna od "NULL" zeby mozna bylo sprawdzic, czy URI w ogole byl obecny
           
@@ -162,7 +162,7 @@ void loop() {
             if(delta != 15) //Jezeli nie bylo markera payloadu, mozna obsluzyc opcje bez przejmowania sie bledami
             {
 
-              //Dlugosc opcji w analogiczny sposob do delty.
+              //Dlugosc opcji zdobywamy w analogiczny sposob do delty.
               if(optionLength == 13){
                 optionLength += packetBuffer[marker]; ++marker; 
               }
@@ -187,46 +187,53 @@ void loop() {
               //URI-path
               {
                 Serial.println(F("Opcja URI-Path"));
-                if(uriPath == "NULL")
+                for(int i=0; i<optionLength; ++i)
                 {
-                  for(int i=0; i<optionLength; ++i)
-                  {
-                    _uriPath[i] = packetBuffer[marker]; 
-                    ++marker;
-                  }
-                  ArrayToString(uriPath, _uriPath, optionLength);
+                  _uriPath[i] = packetBuffer[marker]; 
+                  ++marker;
                 }
+                ArrayToString(uriPath, _uriPath, optionLength);
+                
                 Serial.print(F("URI-Path: ")); Serial.println(uriPath);
               }
 
-/*
-              if(optionNumber == 17)
+              else if(optionNumber == 17)
               //Accept - czyli jaka reprezentacje woli klient
               {
                 Serial.println(F("Opcja Accept"));
-                contentFormat = packetBuffer[marker]; ++marker;
-                if(optionLength==2) ++marker;
+                if(optionLength==1)
+                {
+                  contentFormat = packetBuffer[marker]; 
+                  ++marker;
+                }
+                if(optionLength==2)
+                {
+                  contentFormat = packetBuffer[marker];
+                  contentFormat << 8; //Eksperymentalne; nie mialem na czym tego przetestowac
+                  ++marker;
+                  contentFormat = contentFormat | packetBuffer[marker];
+                  ++marker;
+                }
                 
                 Serial.println(F("Chosen content format: ")); 
-                if(contentFormat==0)
-                  Serial.println(F("plain text"));
-                else if(contentFormat==40)
-                  Serial.println(F("application/link-format"));
-                else
-                  Serial.println(F("Requested format not supported"));
-
-                //0 - plain text
-                //40 - application/link-format
-                //reszta raczej nas nie obchodzi
-                //rozmiar moze byc do 2B, ale tak naprawde wystarczy sprawdzic 1
+                if(contentFormat==0) Serial.println(F("plain text"));
+                else if(contentFormat==40) Serial.println(F("application/link-format"));
+                else if(optionLength == 0)
+                {
+                  Serial.println(F("Content-format option length is zero: assuming text/plain"));
+                  //Copper robil tak zamiast wysylac zero. Stad takie zalozenie (nie do konca zgodne z RFC)
+                  contentFormat = 0;
+                }
+                else Serial.println(F("Requested format not supported"));
+                //reszta formatow raczej nas nie obchodzi
               }
 
-              if(optionNumber == 12)//content-format: indicates the representation format of the message payload
+              else if(optionNumber == 12)//content-format: indicates the representation format of the message payload
               {
                 Serial.println(F("Opcja Content-Format"));
               }
-*/
-              if(optionNumber == 4)//Etag
+              
+              else if(optionNumber == 4)//Etag
               {
                 Serial.println(F("Opcja ETag"));
                 //Obslugiwane sa tylko 2 bajty etag - patrz: dokumentacja
@@ -247,8 +254,8 @@ void loop() {
               else //Jezeli jest nieobslugiwana opcja, i tak trzeba przesunac marker
               {
                 marker += optionLength;
+                Serial.println(F("Unsupported option")); 
               }
-              
             }
           }
 
