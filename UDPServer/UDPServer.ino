@@ -9,7 +9,12 @@
 #define ETAG_MAX_SIZE 2 /*Rozmiar obslugiwanego ETag w bajtach - patrz: dokumentacja*/
 #define URIPATH_MAX_SIZE 255 /*Rozmiar URI-Path w bajtach - wskazanie zasobu*/
 
-//#define
+//Sciezki do zasobow
+#define AVERAGE 
+#define MEAN
+#define STD_DEV
+#define DIVIDIBLE 
+#define NUMBERS 
 
 enum ETagStatus {NO_ETAG, VALID, INVALID};
 
@@ -128,7 +133,7 @@ void loop() {
           
           uint16_t contentFormat = 0x0000;
           uint8_t _uriPath[URIPATH_MAX_SIZE]; //Tablica na znaki w postaci liczb
-          String uriPath = "NULL"; //wl. URI; zaczyna od "NULL" zeby mozna bylo sprawdzic, czy URI w ogole byl obecny
+          String uriPath = ""; //wl. URI; zaczyna od "NULL" zeby mozna bylo sprawdzic, czy URI w ogole byl obecny
           
           while(!payloadFound && packetBuffer[marker]!='\0' ) //Dopoki nie znajdzie sie payload albo nie skonczy ramka
           {
@@ -192,8 +197,10 @@ void loop() {
                   _uriPath[i] = packetBuffer[marker]; 
                   ++marker;
                 }
-                ArrayToString(uriPath, _uriPath, optionLength);
-                
+                String tmp = "";
+                ArrayToString(tmp, _uriPath, optionLength); 
+                uriPath += '/';
+                uriPath += tmp;  //URI moze skladac sie z kilku segmentow
                 Serial.print(F("URI-Path: ")); Serial.println(uriPath);
               }
 
@@ -247,6 +254,7 @@ void loop() {
                 else{
                   _eTagStatus = INVALID;
                   Serial.println(F("Invalid ETag")); 
+                  marker += optionLength;
                 }
                 /* Jezeli dl. nierowna 2, od razu wiemy ze zasob nie bedzie mial zgodnego ETag.
                    Informacje na temat ETag juz mamy; ich obsluga bedzie oddzielnie, dalej   */
