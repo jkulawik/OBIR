@@ -125,8 +125,8 @@ void loop() {
           enum ETagStatus _eTagStatus = NO_ETAG;
           
           uint16_t contentFormat;
-          uint8_t _uriPath[URIPATH_MAX_SIZE];
-          String uriPath = "NULL"; //init zeby mozna bylo sprawdzic, czy URI w ogole byl obecny
+          uint8_t _uriPath[URIPATH_MAX_SIZE]; //Tablica na znaki w postaci liczb
+          String uriPath = "NULL"; //wl. URI; zaczyna od "NULL" zeby mozna bylo sprawdzic, czy URI w ogole byl obecny
           
           while(!payloadFound) //!!!!!!!!!!!----------------->TODO: wszystko pod whilem jest do przetestowania
           {
@@ -184,7 +184,7 @@ void loop() {
                 if(uriPath == "NULL")
                 {
                   for(int i=0; i<optionLength; i++)
-                    _uriPath[i] = packetBuffer[marker]; ++marker;
+                    _uriPath[i] = packetBuffer[marker+i]; ++marker;
                   ArrayToString(uriPath,_uriPath, URIPATH_MAX_SIZE);
                 }
                 Serial.println(F("URI-Path: ")); Serial.println(uriPath);
@@ -196,13 +196,14 @@ void loop() {
                 Serial.println(F("Opcja Accept"));
                 contentFormat = packetBuffer[marker]; ++marker;
                 if(optionLength==2) ++marker;
+                
                 Serial.println(F("Chosen content format: ")); 
                 if(contentFormat==0)
-                  Serial.println(F("plain text");
+                  Serial.println(F("plain text"));
                 else if(contentFormat==40)
                   Serial.println(F("application/link-format"));
                 else
-                  Serial.println(F("not supported"));
+                  Serial.println(F("Requested format not supported"));
 
                 //0 - plain text
                 //40 - application/link-format

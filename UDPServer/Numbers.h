@@ -21,36 +21,59 @@ class Numbers
   public:
   int nums[MAX_NUMBERS];
   int current_len = 0;
-  float median = 0, average = 0, deviation = 0;
+  float median = 0, average = 0, deviation = 0; //Metryki
 
-  /*Konstruktor domyslny; jedyne co robi to ust. */
+  /*Konstruktor domyslny*/
   Numbers() {} 
   
-  /*Dodaje numer do zbioru.
+  /*AddNum - Dodaje numer do zbioru.
   Zwraca false jezeli zbior jest pelny.
-  Sortuje zbior jezeli dodano element.*/
+  Sortuje zbior jezeli dodano element oraz przelicza metryki.*/
   bool AddNum(int num) 
   {
     if(current_len < MAX_NUMBERS)
     {
       nums[current_len] = num;
       ++current_len;
-      void BubbleSort();
-      
-      //Metryka 1/3 - mediana
-      if(current_len%2==0)
-        median = float((nums[current_len/2]+nums[(current_len+1)/2])/2);
-      else median = nums[current_len-1/2];
-      
-      //Metryka 2/3 - srednia
-      int sum = 0;
-      for(int i=0; i<current_len; i++)
+      BubbleSort();
+
+      //Liczymy metryki przy dodaniu liczby, aby nie powtarzac obliczen przy GET
+      countMedian();      
+      countAverage();
+      countDeviation();
+
+      return true;
+    }
+    else return false;
+  }
+
+  //Metryka 1/3 - mediana
+  float getMedian() {return median;}
+  void countMedian()
+  {
+    if(current_len%2==0)
+      median = float((nums[current_len/2]+nums[current_len/2 + 1])/2);
+    else median = nums[current_len-1/2];
+  }
+  
+  
+  //Metryka 2/3 - srednia
+  float getAverage() {return average;}
+  void countAverage()
+  {
+    int sum = 0;
+    
+    for(int i=0; i<current_len; i++)
         sum += nums[i];
-      average = float(sum/current_len);
-      
-      //Metryka 3/3 - odchylenie standardowe
-      if(average!=0)
-      {
+    average = float(sum/current_len);
+  }
+
+  //Metryka 3/3 - odchylenie standardowe
+  float getStandardDeviation() {return deviation;}
+  void countDeviation()
+  {
+    if(average!=0)
+    {
       float sum=0;
       for(int i=0; i<current_len; i++)
         sum += (nums[i]-average)*(nums[i]-average);
@@ -59,20 +82,8 @@ class Numbers
       /*Bardziej wyszukane algorytmy pierwiastkowania if we fancy:
        https://www.codeproject.com/Articles/69941/Best-Square-Root-Method-Algorithm-Function-Precisi
       */
-      }
-      return true;
     }
-    else return false;
   }
-
-  //Metryka 1/3
-  float getMedian() {return median;}
-  
-  //Metryka 2/3
-  float getAverage() {return average;}
-
-  //Metryka 3/3
-  float getStandardDeviation() {return deviation;}
 
   void BubbleSort() //mozna zmodyfikowac do Comb sort jezeli bedzie za wolny
   {
