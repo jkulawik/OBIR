@@ -10,11 +10,12 @@
 #define URIPATH_MAX_SIZE 255 /*Rozmiar URI-Path w bajtach - wskazanie zasobu*/
 
 //Sciezki do zasobow
-#define AVERAGE 
-#define MEAN
-#define STD_DEV
-#define DIVIDIBLE 
-#define NUMBERS 
+#define AVERAGE "/metrics/average"
+#define MEAN "/metrics/mean"
+#define STD_DEV "/metrics/deviation"
+#define DIVIDIBLE "/numbers/divs"
+#define NUMBERS "/numbers/all"
+#define WELLKNOWN "/.well-known/core"
 
 enum ETagStatus {NO_ETAG, VALID, INVALID};
 
@@ -285,7 +286,25 @@ void loop() {
             
             if(_code == 1) //GET
             {
-              1+1;
+              if(_eTagStatus == VALID)
+              {
+                //if(eTag[1]) 
+              }
+              else
+              {
+                //wyslac 2.05 z zasobem i nowym ETagiem
+              }
+              
+              
+              if(uriPath == MEAN) 
+              {
+                
+              } //else if inne zasoby...
+              else
+              {
+                Serial.println(F("Bad URI path"));
+                //TODO wyslac blad
+              }
             }
 
             if(_code == 2) //PUT
