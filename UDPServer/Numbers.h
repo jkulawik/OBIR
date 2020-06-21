@@ -45,6 +45,21 @@ class Numbers
 +--------------+---------+------+---------+-----------+---------+ 
  */
 
+  bool checkETag(uint8_t id, uint8_t &tag) 
+  /*id - pierwszy bajt ETaga, tag - drugi 
+  Fcja sprawdza, czy pierwszy bajt sie zgadza;
+  Ponadto wpisuje aktualny tag do zmiennej tag */
+  {
+    for(int i = 0; i < 5; ++i)
+    {
+      if(id == eTags[1][i])
+      {
+        tag = eTags[2][i];
+        return true;
+      }
+    }
+    return false;
+  }
   
   /*AddNum - Dodaje numer do zbioru.
   Zwraca false jezeli zbior jest pelny.

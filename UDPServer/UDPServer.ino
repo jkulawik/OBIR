@@ -43,8 +43,6 @@ Numbers Numbers;
 #include "Conversions.h"
 #include "coap-interpreter.h"
 
-#include "CoapPacket.h"
-
 void setup() {
     //Zwyczajowe przywitanie z userem (niech wie ze system sie uruchomil poprawnie)
     Serial.begin(115200);
@@ -286,9 +284,29 @@ void loop() {
             
             if(_code == 1) //GET
             {
-              if(_eTagStatus == VALID)
+              if(_eTagStatus == VALID) //Sprawdzenie, czy ETag w ogole zostal nadany
               {
-                //if(eTag[1]) 
+                uint8_t second_hex_fresh = 0x00; //Tu bedzie wpisany aktualny drugi bajt ETaga
+                if( checkETag(eTag[1], second_hex_fresh) ) 
+                {
+                  Serial.println(F("ETag matches an existing resource."));
+                  if( eTag[2] == second_hex_fresh ) //porownujemy otrzmany bajt 2 z naszym
+                  {
+                    Serial.println(F("ETag is fresh."));
+                    //Wyslac 2.03 z aktualnym ETagiem
+                  }
+                  else
+                  {
+                    Serial.println(F("ETag is outdated."));
+                    //Wyslac 2.05 z aktualnym ETagiem i 
+                  }
+                   
+                }
+                else
+                {
+                  Serial.println(F("Bad ETag, couldn't map to existing resources' ETags"));
+                  //wyslac blad
+                }
               }
               else
               {
