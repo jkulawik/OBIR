@@ -9,6 +9,8 @@
 #define ETAG_MAX_SIZE 2 /*Rozmiar obslugiwanego ETag w bajtach - patrz: dokumentacja*/
 #define URIPATH_MAX_SIZE 4 /*Rozmiar URI-Path w bajtach - wskazanie zasobu*/
 
+//#define
+
 enum ETagStatus {NO_ETAG, VALID, INVALID};
 
 byte MAC[]={0x28, 0x16, 0xAD, 0x71, 0xB4, 0xA7}; //Adres MAC wykorzystanej karty sieciowej
@@ -128,7 +130,7 @@ void loop() {
           uint8_t _uriPath[URIPATH_MAX_SIZE]; //Tablica na znaki w postaci liczb
           String uriPath = "NULL"; //wl. URI; zaczyna od "NULL" zeby mozna bylo sprawdzic, czy URI w ogole byl obecny
           
-          while(!payloadFound) //!!!!!!!!!!!----------------->TODO: wszystko pod whilem jest do przetestowania
+          while(!payloadFound && packetBuffer[marker]!='\0' ) //!!!!!!!!!!!----------------->TODO: wszystko pod whilem jest do przetestowania
           {
             delta = (packetBuffer[marker] & 0xF0) >> 4; //Maska na pierwsze 4 bity
             optionLength = (packetBuffer[marker] & 0x0F) >> 4; //Maska na kolejne 4 bity
@@ -151,17 +153,6 @@ void loop() {
               ++marker;
             }
 
-            //Dlugosc opcji w analogiczny sposob.
-            if(optionLength == 13){
-              optionLength += packetBuffer[marker]; ++marker; 
-            }
-            else if(optionLength == 14){
-              optionLength = 269 + 256*packetBuffer[marker]; ++marker;
-              optionLength += packetBuffer[marker]; ++marker;
-            }
-
-            Serial.print(F("Option Length: "));Serial.print(optionLength, DEC);
-
             if(delta == 15) //Trafiono na marker payloadu
             {
               payloadFound = true;
@@ -169,6 +160,16 @@ void loop() {
             }
             else //Jezeli nie bylo markera payloadu, mozna obsluzyc opcje bez przejmowania sie bledami
             {
+
+              //Dlugosc opcji w analogiczny sposob do delty.
+              if(optionLength == 13){
+                optionLength += packetBuffer[marker]; ++marker; 
+              }
+              else if(optionLength == 14){
+                optionLength = 269 + 256*packetBuffer[marker]; ++marker;
+                optionLength += packetBuffer[marker]; ++marker;
+              }
+            
               optionNumber+=delta; //Numer opcji to nr poprzedniej+delta
               
               /*Marker powinien w tym momencie wskazywac
@@ -177,6 +178,10 @@ void loop() {
 
               //Opcje do obsluzenia podczas odbierania:
 
+              Serial.print(F("Delta: "));Serial.print(delta, DEC);
+              Serial.print(F(", Option number: "));Serial.print(optionNumber, DEC);
+              Serial.print(F(", Option Length: "));Serial.println(optionLength, DEC);
+              
               if(optionNumber == 11)
               /*URI-path*/
               {
@@ -184,10 +189,10 @@ void loop() {
                 if(uriPath == "NULL")
                 {
                   for(int i=0; i<optionLength; i++)
-                    _uriPath[i] = packetBuffer[marker+i]; ++marker;
+                    _uriPath[i] = packetBuffer[marker]; ++marker;
                   ArrayToString(uriPath,_uriPath, URIPATH_MAX_SIZE);
                 }
-                Serial.println(F("URI-Path: ")); Serial.println(uriPath);
+                Serial.print(F("URI-Path: ")); Serial.println(uriPath);
               }
 
               if(optionNumber == 17)
