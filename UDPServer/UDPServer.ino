@@ -130,10 +130,10 @@ void loop() {
           uint8_t _uriPath[URIPATH_MAX_SIZE]; //Tablica na znaki w postaci liczb
           String uriPath = "NULL"; //wl. URI; zaczyna od "NULL" zeby mozna bylo sprawdzic, czy URI w ogole byl obecny
           
-          while(!payloadFound && packetBuffer[marker]!='\0' ) //!!!!!!!!!!!----------------->TODO: wszystko pod whilem jest do przetestowania
+          while(!payloadFound && packetBuffer[marker]!='\0' ) //Dopoki nie znajdzie sie payload albo nie skonczy ramka
           {
             delta = (packetBuffer[marker] & 0xF0) >> 4; //Maska na pierwsze 4 bity
-            optionLength = (packetBuffer[marker] & 0x0F) >> 4; //Maska na kolejne 4 bity
+            optionLength = (packetBuffer[marker] & 0x0F); //Maska na kolejne 4 bity
             ++marker; //przesuniecie markera na nastepny bajt
 
             /*kiedy delta albo optionLength < 12, to jest brak rozszerzen; 
@@ -152,13 +152,14 @@ void loop() {
               delta += packetBuffer[marker]; //dodajemy wartosc kolejnego bajtu
               ++marker;
             }
-
-            if(delta == 15) //Trafiono na marker payloadu
+            else if(delta == 15) //Trafiono na marker payloadu
             {
               payloadFound = true;
               payloadMarker = marker+1; //payload zaczyna sie po markerze, ktory ma 1 bajt
+              Serial.println(F("Payload reached"));
             }
-            else //Jezeli nie bylo markera payloadu, mozna obsluzyc opcje bez przejmowania sie bledami
+            
+            if(delta != 15) //Jezeli nie bylo markera payloadu, mozna obsluzyc opcje bez przejmowania sie bledami
             {
 
               //Dlugosc opcji w analogiczny sposob do delty.
@@ -182,8 +183,8 @@ void loop() {
               Serial.print(F(", Option number: "));Serial.print(optionNumber, DEC);
               Serial.print(F(", Option Length: "));Serial.println(optionLength, DEC);
               
-              if(optionNumber == 11)
-              /*URI-path*/
+ /*             if(optionNumber == 11)
+              //URI-path
               {
                 Serial.println(F("Opcja URI-Path"));
                 if(uriPath == "NULL")
@@ -194,9 +195,10 @@ void loop() {
                 }
                 Serial.print(F("URI-Path: ")); Serial.println(uriPath);
               }
-
+*/
+/*
               if(optionNumber == 17)
-              /*Accept - czyli jaka reprezentacje woli klient*/
+              //Accept - czyli jaka reprezentacje woli klient
               {
                 Serial.println(F("Opcja Accept"));
                 contentFormat = packetBuffer[marker]; ++marker;
@@ -216,6 +218,11 @@ void loop() {
                 //rozmiar moze byc do 2B, ale tak naprawde wystarczy sprawdzic 1
               }
 
+              if(optionNumber == 12)//content-format: indicates the representation format of the message payload
+              {
+                Serial.println(F("Opcja Content-Format"));
+              }
+*/
               if(optionNumber == 4)//Etag
               {
                 Serial.println(F("Opcja ETag"));
@@ -234,11 +241,11 @@ void loop() {
                 /* Jezeli dl. nierowna 2, od razu wiemy ze zasob nie bedzie mial zgodnego ETag.
                    Informacje na temat ETag juz mamy; ich obsluga bedzie oddzielnie, dalej   */
               }
-              
-              if(optionNumber == 12)//content-format - to chyba raczej do odpowiedzi. Potencjalnie do wywalenia
+              else //Jezeli jest nieobslugiwana opcja, i tak trzeba przesunac marker
               {
-                Serial.println(F("Opcja Content-Format"));
+                marker += optionLength;
               }
+              
             }
           }
 
