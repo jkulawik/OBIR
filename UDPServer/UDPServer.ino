@@ -42,6 +42,8 @@ Numbers Numbers;
 #include "Conversions.h"
 #include "CoAP-factory.h"
 
+coapFactory coapFactory; //Obiekt do wysylania pakietow
+
 void setup() {
     //Zwyczajowe przywitanie z userem (niech wie ze system sie uruchomil poprawnie)
     Serial.begin(115200);
@@ -373,6 +375,9 @@ void loop() {
                   if(Numbers.AddNum(new_number)) 
                   {
                     //Numer dodano poprawnie; odpowiedziec nalezyta wiadomoscia. Chyba mozna dolaczyc od razu ETag
+                    //2.04:
+                    coapFactory.SetHeader(_token, _token_len, 2, 4, _mid);
+                    coapFactory.SendPacketViaUDP(Udp);
                   }
                   else
                   {
@@ -394,19 +399,4 @@ void loop() {
          
         }
     }
-}
-
-void SendUDPString(char packetBuffer[])
-{
-        //odsylamy pakiet do nadawcy (wywolania: Udp.remoteIP(), Udp.remotePort() - pozwola nam sie 
-        //   zorentowac jaki jest jego IP i numer portu UDP)
-        //UWAGA!!!  wywolania Udp.remoteIP(), Udp.remotePort() zwracaja
-        //          poprawny(sensorwny) wynik jezeli jakis datagram UDP faktycznie otrzymano!!!
-
-        //wielkosc tablicy = rozmiar tablicy / rozmiar elementu:
-        int len = sizeof(packetBuffer)/sizeof(packetBuffer[0]); 
-
-        Udp.beginPacket(Udp.remoteIP(), Udp.remotePort());
-        Udp.write(packetBuffer, len);
-        Udp.endPacket();
 }

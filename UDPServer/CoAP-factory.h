@@ -11,19 +11,39 @@ class coapFactory{
   uint8_t workToken[MAX_TOKEN_LEN];
   uint8_t tokenLen = 0;
 
+  public:
   //Konstruktor domyslny
   coapFactory()
   {
-    
+
   }
 
-  bool SetHeader(uint8_t _type, uint8_t _tokenArr[], uint8_t _class, uint8_t _code, uint16_t _messageID)
+  void SendPacketViaUDP(ObirEthernetUDP &Udp)
+  {
+    Udp.beginPacket(Udp.remoteIP(), Udp.remotePort());
+    Udp.write(workPacket, packetLen);
+    Udp.endPacket();
+
+    CleanTheFactory();
+  }
+
+  void CleanTheFactory()
+  {
+    packetLen = 0;
+    tokenLen = 0;
+    //Reszta i tak bedzie nadpisana
+  }
+
+   bool SetHeader(uint8_t _tokenArr[], uint8_t tokenLen, uint8_t _class, uint8_t _code, uint16_t _messageID)
+   {
+    //always NON type
+      return SetHeaderFull(1, _tokenArr, tokenLen, _class, _code, _messageID);
+   }
+
+  //Ustawia naglowek, zwraca czy zostal poprawnie stworzony
+  bool SetHeaderFull(uint8_t _type, uint8_t _tokenArr[], uint8_t tokenLen,uint8_t _class, uint8_t _code, uint16_t _messageID)
   {
     if(_type > 3) return false; //Istnieja tylko 4 typy, od 0 do 3
-
-    //wielkosc tablicy = rozmiar tablicy / rozmiar elementu:
-    tokenLen = sizeof(_tokenArr)/sizeof(_tokenArr[0]);
-    if(tokenLen>MAX_TOKEN_LEN) return false;
     
     uint8_t _version = COAP_VERSION;
     //Pierwszy bajt:
@@ -40,8 +60,9 @@ class coapFactory{
 
     if(packetLen == 0) packetLen = 4;
     
-    for(int i=0; i < tokenLen; ++i) workToken[i] = tokenArr[i];
-  }
+    for(int i=0; i < tokenLen; ++i) workPacket[packetLen+i] = _tokenArr[i]; //Przepisujemy tokenLen bajtow
+    packetLen += tokenLen;
 
-  
+    return true;
+  }
 };
