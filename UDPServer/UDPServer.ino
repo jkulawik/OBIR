@@ -1,13 +1,12 @@
 #include <ObirDhcp.h>           //dla pobierania IP z DHCP - proforma dla ebsim'a 
 #include <ObirEthernet.h>       //niezbedne dla klasy 'ObirEthernetUDP'
 #include <ObirEthernetUdp.h>    //sama klasa 'ObirEthernetUDP'
-//#include "coap-simple.h"        //Biblioteka CoAP
 
 #define UDP_SERVER_PORT 5683 /*najczesciej uzywany port*/
 
 #define HEADER_SIZE 4 /*Rozmiar naglowka w bajtach - oznacza pierwszy bit tokenu*/
 #define ETAG_MAX_SIZE 2 /*Rozmiar obslugiwanego ETag w bajtach - patrz: dokumentacja*/
-#define URIPATH_MAX_SIZE 255 /*max. rozmiar URI-Path w bajtach - wskazanie zasobu*/
+#define URIPATH_MAX_SIZE 255 /*max. rozmiar URI-Path w bajtach*/
 
 //Sciezki do zasobow
 #define AVERAGE "/metrics/average"
@@ -36,12 +35,12 @@ ObirEthernetUDP Udp;
 #include "Numbers.h"
 Numbers Numbers;
 /*    !!!UWAGA!!!    
-           Instrukcja obslugi klasy Numbers w pliku naglowkowym (Numbers.h)
-           Liczba przechowywanych liczb jest okreslana w powyzszym pliku.
+      Instrukcja obslugi klasy Numbers w pliku naglowkowym (Numbers.h)
+      Liczba przechowywanych liczb jest okreslana w tym samym pliku.
 */   
 
 #include "Conversions.h"
-#include "coap-interpreter.h"
+#include "CoAP-factory.h"
 
 void setup() {
     //Zwyczajowe przywitanie z userem (niech wie ze system sie uruchomil poprawnie)
