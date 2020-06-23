@@ -77,8 +77,8 @@ class Numbers
       countAverage();
       countDeviation();
 
-      eTags[1][3] == hexRAND; //update Div ETag
-      eTags[1][4] == hexRAND; //update Numbers ETag
+      eTags[1][3] = hexRAND; //update Div ETag
+      eTags[1][4] = hexRAND; //update Numbers ETag
 
       return true;
     }
@@ -93,7 +93,7 @@ class Numbers
       median = float((nums[current_len/2]+nums[current_len/2 + 1])/2);
     else median = nums[current_len-1/2];
 
-    eTags[1][1] == hexRAND; //update Mean ETag
+    eTags[1][1] = hexRAND; //update Mean ETag
   }
   
   
@@ -107,7 +107,7 @@ class Numbers
         sum += nums[i];
     average = float(sum/current_len);
 
-    eTags[1][0] == hexRAND; //update Avg ETag
+    eTags[1][0] = hexRAND; //update Avg ETag
   }
 
   //Metryka 3/3 - odchylenie standardowe
@@ -125,7 +125,7 @@ class Numbers
        https://www.codeproject.com/Articles/69941/Best-Square-Root-Method-Algorithm-Function-Precisi
       */
 
-      eTags[1][2] == hexRAND; //update std-deviation ETag
+      eTags[1][2] = hexRAND; //update std-deviation ETag
     }
   }
 
