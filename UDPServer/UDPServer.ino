@@ -132,7 +132,8 @@ void loop() {
           uint8_t eTag[ETAG_MAX_SIZE]; //patrz: dokumentacja
           enum ETagStatus _eTagStatus = NO_ETAG;
           
-          uint16_t contentFormat = 0x0000;
+          uint16_t contentFormat = 0xFFFF;
+          uint16_t acceptFormat = 0xFFFF;
           uint8_t _uriPath[URIPATH_MAX_SIZE]; //Tablica na znaki w postaci liczb
           String uriPath = ""; //wl. URI; zaczyna od "NULL" zeby mozna bylo sprawdzic, czy URI w ogole byl obecny
           
@@ -187,7 +188,7 @@ void loop() {
               Serial.print(F(", Option Length: "));Serial.println(optionLength, DEC);
               
               if(optionNumber == 11)
-              //URI-path
+              //URI-path 
               {
                 Serial.println(F("Opcja URI-Path"));
                 for(int i=0; i<optionLength; ++i)
@@ -202,35 +203,43 @@ void loop() {
                 Serial.print(F("URI-Path: ")); Serial.println(uriPath);
               }
 
-              else if(optionNumber == 17)
-              //Accept - czyli jaka reprezentacje woli klient
+              else if(optionNumber == 17 || optionNumber == 12)
+              //Accept (czyli jaka reprezentacje woli klient) lub content-format; Sa praktycznie identyczne
               {
-                Serial.println(F("Opcja Accept"));
+                uint16_t contentType; //Tu bedzie przechowana zawartosc opcji
+
+                if(optionNumber == 17) Serial.println(F("Opcja Accept"));
+                if(optionNumber == 12) Serial.println(F("Opcja Content-format"));
+                
                 if(optionLength==1)
                 {
-                  contentFormat = packetBuffer[marker]; 
+                  contentType = packetBuffer[marker]; 
                   ++marker;
                 }
                 if(optionLength==2)
                 {
-                  contentFormat = packetBuffer[marker];
-                  contentFormat << 8; //Eksperymentalne; nie mialem na czym tego przetestowac
+                  contentType = packetBuffer[marker];
+                  contentType << 8; //Eksperymentalne; nie mialem na czym tego przetestowac
                   ++marker;
-                  contentFormat = contentFormat | packetBuffer[marker];
+                  contentType = contentType | packetBuffer[marker];
                   ++marker;
                 }
                 
-                Serial.println(F("Chosen content format: ")); 
-                if(contentFormat==0) Serial.println(F("plain text"));
-                else if(contentFormat==40) Serial.println(F("application/link-format"));
+                Serial.println(F("Chosen content type: ")); 
+                if(contentType==0) Serial.println(F("plain text"));
+                else if(contentType==40) Serial.println(F("application/link-format"));
                 else if(optionLength == 0)
                 {
-                  Serial.println(F("Content-format option length is zero: assuming text/plain"));
+                  Serial.println(F("Content-type option length is zero: assuming text/plain"));
                   //Copper robil tak zamiast wysylac zero. Stad takie zalozenie (nie do konca zgodne z RFC)
                   contentFormat = 0;
                 }
-                else Serial.println(F("Requested format not supported"));
+                else Serial.println(F("Given format not supported"));
                 //reszta formatow raczej nas nie obchodzi
+
+                //Zaleznie od opcji, wartosc jest wpisana do odp. zmiennej
+                if(optionNumber == 17) acceptFormat = contentType;
+                if(optionNumber == 12) contentFormat = contentType;
               }
 
               else if(optionNumber == 12)//content-format: indicates the representation format of the message payload
@@ -345,7 +354,15 @@ void loop() {
 
             if(_code == 2) //PUT
             {
-              1+1;
+              if(contentFormat != 0) //inny niz text/plain
+              {
+                Serial.println(F("Unsupported content format"));
+                //wyslac blad 4.15 
+              }
+              else
+              {
+                
+              }
             }
 
           }
