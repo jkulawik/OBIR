@@ -159,11 +159,8 @@ void loop() {
               ++marker;
             }
             else if(delta == 15) //Trafiono na marker payloadu
-            {
-              payloadFound = true;
-              payloadMarker = marker+1; //payload zaczyna sie po markerze, ktory ma 1 bajt
-              Serial.println(F("Payload reached"));
-            }
+              payloadMarker = marker;
+              //Czytanie payloadu potem (po petli while), dla ulatwienia
             
             if(delta != 15) //Jezeli nie bylo markera payloadu, mozna obsluzyc opcje bez przejmowania sie bledami
             {
@@ -269,13 +266,28 @@ void loop() {
           }
 
         /*---1.2.E Koniec odczytu opcji---*/
+
+          //Czytanie payloadu:
+          //payload zaczyna sie na pozycji payloadMarker w pakiecie (packetBuffer)
+          if(payloadMarker > 0)
+          {
+            uint8_t payloadLen = packetLen - payloadMarker;
+            uint8_t payload[payloadLen];
+            Serial.print(F("Payload: 0x"));
+            for(int i=0; i < payloadLen; ++i)
+            {
+              payload[i] = packetBuffer[payloadMarker+i];
+              Serial.print(payload[i], HEX);
+            }
+            Serial.print(F(" = "));
+            for(int i=0; i < payloadLen; ++i)Serial.print((char)payload[i]);
+            Serial.println();
+          }
+          else Serial.println("No payload found");
         
         /*---1.E Koniec obieranego pakietu---*/
         
         /*---2.S Odpowiadanie---*/
-
-          //Obsluga payloadu:
-          //payload zaczyna sie na pozycji payloadMarker w pakiecie (packetBuffer)
         
           if(_class == 0)
           {
@@ -326,7 +338,7 @@ void loop() {
               } //else if inne zasoby...
               else
               {
-                Serial.println(F("Bad URI path"));
+                Serial.println(F("Bad or empty URI path"));
                 //TODO wyslac blad
               }
             }
