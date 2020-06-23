@@ -22,7 +22,7 @@ Kod ten to m.in:
 class Numbers
 {
   public:
-  int nums[MAX_NUMBERS];
+  unsigned int nums[MAX_NUMBERS];
   int current_len = 0;
   float median = 0, average = 0, deviation = 0; //Metryki
 
@@ -64,7 +64,7 @@ class Numbers
   /*AddNum - Dodaje numer do zbioru.
   Zwraca false jezeli zbior jest pelny.
   Sortuje zbior jezeli dodano element oraz przelicza metryki.*/
-  bool AddNum(int num) 
+  bool AddNum(unsigned int num) 
   {
     if(current_len < MAX_NUMBERS)
     {

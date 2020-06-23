@@ -36,17 +36,19 @@ unsigned long pow_int(unsigned long base, int exp)
     return powresult;
 }
 
-//Funkcja zamienia ciag znakow typu string na int o dowolnej podstawie (hex, oct...)
-unsigned long AnyBaseAsciiToInt(int alBase, String strData)
+/*Funkcja zamienia ciag znakow typu string na int o dowolnej podstawie (hex, oct...)
+oraz wpisuje go do zmiennej result. 
+Fcja zwraca, czy tablica zawiera znaki nie-alfanumeryczne lub wieksze niz podana podstawa*/
+unsigned int AnyBaseAsciiToInt(int alBase, uint8_t charArray[], unsigned int &result)
 {
-  int len = strData.length();
+  unsigned int len = sizeof(charArray)/sizeof(charArray[0]); //wielkosc tablicy = rozmiar tablicy / rozmiar elementu:
   char c;
-  unsigned long localresult = 0;
-  unsigned long multiplier = 0;
+  unsigned int localresult = 0;
+  unsigned int multiplier = 0;
   
   for(int i = 0; i < len; i++) //sprawdzamy wszystkie znaki
   {
-    c = strData.charAt(len-i-1); //pobiera kolejny znak od tylu
+    c = charArray[len-i-1]; //pobiera kolejny znak od tylu
     if(isAlphaNumeric(c)) 
     {
       //od tego momentu traktujemy c jako int
@@ -57,10 +59,19 @@ unsigned long AnyBaseAsciiToInt(int alBase, String strData)
       
       multiplier = pow_int(alBase, i);
       
-      if(c < alBase) localresult += ((int) c)*multiplier;
-      else Serial.println(F("Ignoring a character bigger than number base"));
+      if(c < alBase) localresult += ((unsigned int) c)*multiplier;
+      else
+      {
+        Serial.println(F("Ignoring a character bigger than number base"));
+        return false;
+      }
     }
-    else Serial.println(F("Skipping non-alphanumeric character"));
+    else
+    {
+      Serial.println(F("Non-alphanumeric character"));
+      return false;
+    }
   }  
-  return localresult;
+  result = localresult;
+  return true;
 }

@@ -72,7 +72,7 @@ void loop() {
         //if(len<=0) Udp.flush();return;     //nie ma danych - wywolujemy funkcje wymiecenia bufora
             
         //prezentujemy otrzymany pakiet (zakladajac ze zawiera znaki ASCII)
-        Serial.println("\n\n+---Received a message---+");
+        Serial.println("\n\n+----Received a message----+");
         packetBuffer[packetLen]='\0';
 
         /*---1.S Interpretacja odebranego pakietu---*/
@@ -114,6 +114,7 @@ void loop() {
 
           /*---1.1.E Koniec naglowka---*/
 
+          Serial.println("\n|--->Reading options:");
 
           /*---1.2.S Opcje---*/
 
@@ -183,7 +184,7 @@ void loop() {
 
               //Opcje do obsluzenia podczas odbierania:
 
-              Serial.print(F("Delta: "));Serial.print(delta, DEC);
+              Serial.print(F("\nDelta: "));Serial.print(delta, DEC);
               Serial.print(F(", Option number: "));Serial.print(optionNumber, DEC);
               Serial.print(F(", Option Length: "));Serial.println(optionLength, DEC);
               
@@ -204,7 +205,10 @@ void loop() {
               }
 
               else if(optionNumber == 17 || optionNumber == 12)
-              //Accept (czyli jaka reprezentacje woli klient) lub content-format; Sa praktycznie identyczne
+              /*Accept (czyli jaka reprezentacje woli klient)
+              lub:
+              Content-format (indicates the representation format of the message payload) 
+              Opcje te sa praktycznie identyczne*/
               {
                 uint16_t contentType; //Tu bedzie przechowana zawartosc opcji
 
@@ -225,14 +229,14 @@ void loop() {
                   ++marker;
                 }
                 
-                Serial.println(F("Chosen content type: ")); 
-                if(contentType==0) Serial.println(F("plain text"));
-                else if(contentType==40) Serial.println(F("application/link-format"));
+                Serial.print(F("Chosen content type: ")); 
+                if(contentType==0) Serial.println(F("plain text\n"));
+                else if(contentType==40) Serial.println(F("application/link-format\n"));
                 else if(optionLength == 0)
                 {
                   Serial.println(F("Content-type option length is zero: assuming text/plain"));
                   //Copper robil tak zamiast wysylac zero. Stad takie zalozenie (nie do konca zgodne z RFC)
-                  contentFormat = 0;
+                  contentType = 0;
                 }
                 else Serial.println(F("Given format not supported"));
                 //reszta formatow raczej nas nie obchodzi
@@ -240,11 +244,6 @@ void loop() {
                 //Zaleznie od opcji, wartosc jest wpisana do odp. zmiennej
                 if(optionNumber == 17) acceptFormat = contentType;
                 if(optionNumber == 12) contentFormat = contentType;
-              }
-
-              else if(optionNumber == 12)//content-format: indicates the representation format of the message payload
-              {
-                Serial.println(F("Opcja Content-Format"));
               }
               
               else if(optionNumber == 4)//Etag
@@ -276,12 +275,17 @@ void loop() {
 
         /*---1.2.E Koniec odczytu opcji---*/
 
+          Serial.println("\n|--->Reading the payload:");
           //Czytanie payloadu:
           //payload zaczyna sie na pozycji payloadMarker w pakiecie (packetBuffer)
-          if(payloadMarker > 0)
+          uint8_t payloadLen = packetLen - payloadMarker;
+          uint8_t payload[payloadLen];
+          
+          if(payloadMarker > 0) //wykrycie, czy w ogole znaleziono payload
+          /*Uwaga: powyzsze sprawdzenie musi byc wykonane przy kazdym uzyciu payloadu.
+          Wymog ten wynika z faktu, ze tablica payload zostala zdefiniowana poza tym sprawdzeniem
+          (dla latwiejszej osiagalnosci); Tym samym moze zawierac wartosci smieciowe.*/
           {
-            uint8_t payloadLen = packetLen - payloadMarker;
-            uint8_t payload[payloadLen];
             Serial.print(F("Payload: 0x"));
             for(int i=0; i < payloadLen; ++i)
             {
@@ -294,8 +298,9 @@ void loop() {
           }
           else Serial.println("No payload found");
         
-        /*---1.E Koniec obieranego pakietu---*/
-        
+        /*---1.E Koniec odbierania pakietu---*/
+
+        Serial.println("\n|--->Handling the message:");
         /*---2.S Odpowiadanie---*/
         
           if(_class == 0)
@@ -303,14 +308,15 @@ void loop() {
             //1+1; jako wypelniacz, do usuniecia
             if(_code == 0) 1+1; //empty; pewnie niepotrzebne
             
-            if(_code == 1) //GET
+            if(_code == 1) //------------------------------------------------------------------> GET
             {
               if(_eTagStatus == VALID) //Sprawdzenie, czy ETag w ogole zostal nadany
               {
                 uint8_t second_hex_fresh = 0x00; //Tu w fcji checkETag bedzie wpisany aktualny drugi bajt ETaga
                 if( Numbers.checkETag(eTag[0], second_hex_fresh) ) 
                 {
-                  Serial.print(F("Correct ETag: 0x"));Serial.print(eTag[0], HEX); Serial.println(second_hex_fresh, HEX); //Debug
+                  Serial.print(F("Received ETag: 0x"));Serial.print(eTag[0], HEX); Serial.println(eTag[1], HEX);
+                  Serial.print(F("Correct  ETag: 0x"));Serial.print(eTag[0], HEX); Serial.println(second_hex_fresh, HEX); //Debug
                   
                   Serial.println(F("ETag matches an existing resource."));
                   if( eTag[1] == second_hex_fresh ) //porownujemy otrzmany bajt 2 z naszym
@@ -336,7 +342,7 @@ void loop() {
                 else
                 {
                   Serial.println(F("Bad ETag, couldn't map to existing resources' ETags"));
-                  //wyslac blad
+                  //wyslac blad - 4.04 "Not found"? 
                 }
               }
               
@@ -352,16 +358,34 @@ void loop() {
               }
             }
 
-            if(_code == 2) //PUT
+            if(_code == 3) //------------------------------------------------------------------> PUT
             {
               if(contentFormat != 0) //inny niz text/plain
               {
-                Serial.println(F("Unsupported content format"));
+                Serial.println(F("Unsupported or unknown payload content format"));
                 //wyslac blad 4.15 
               }
-              else
+              else if(payloadMarker > 0) //Sprawdzenie, czy w ogole jest payload
               {
-                
+                unsigned int new_number = 0; //Do tej zmiennej ponizsza linijka wpisze wartosc
+                if(AnyBaseAsciiToInt(10, payload, new_number)) //Przyjmujemy tylko zapis dziesietny
+                {
+                  Serial.print(F("Number from payload: "));Serial.println(new_number);
+                  if(Numbers.AddNum(new_number)) 
+                  {
+                    //Numer dodano poprawnie; odpowiedziec nalezyta wiadomoscia. Chyba mozna dolaczyc od razu ETag
+                  }
+                  else
+                  {
+                    /*Zbior jest przepelniony: 
+                    "W przypadku wyczerpania pamieci na liczby mozna w odpowiedzi umiescic opcję Size1" */
+                  }
+                }
+                else
+                {
+                  Serial.println(F("Error: Non-decimal number in payload."));
+                  //Zwrocic blad
+                }
               }
             }
 
