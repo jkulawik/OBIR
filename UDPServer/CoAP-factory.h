@@ -86,5 +86,15 @@ class coapFactory{
     packetLen += payloadLen;
   }
 
+  void SetPayloadString(String str)
+  {
+    if(str.length() <= MAX_PAYLOAD_SIZE)
+    {
+      uint8_t TxPayload[MAX_PAYLOAD_SIZE+1];
+      str.toCharArray(TxPayload, str.length()+1); //+1 to miejsce na \0
+      SetPayload(TxPayload, str.length()); //-1 zeby nie wysylac \0
+    }
+  }
+
   
 };

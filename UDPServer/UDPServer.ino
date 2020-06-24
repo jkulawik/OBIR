@@ -84,9 +84,9 @@ void loop() {
         Serial.print(F("CoAP version: "));Serial.println(_version, DEC); //Tego tak naprawde nie potrzebujemy
         
         uint8_t _type = (0x30 & packetBuffer[0])>>4;              //1=NON, 0=CON
-        if(_type==0)Serial.println(F("Type: CON"));
         
-        if(_type == 1) //Nie obslugujemy CON; szkoda zasobow
+        if(_type == 0)Serial.println(F("Type: CON")); //Nie obslugujemy CON; szkoda zasobow
+        if(_type == 1) //Obslugujemy tylko NON
         {
           Serial.println(F("Type: NON"));
           
@@ -307,16 +307,13 @@ void loop() {
         coapFactory.SetTokenAndMID(_token, _token_len, _mid); //Sa takie same dla kazdej odpowiedzi
         
           if(_class == 0)
-          {
-            //1+1; jako wypelniacz, do usuniecia
-            if(_code == 0) 1+1; //empty; pewnie niepotrzebne
-            
+          {            
             if(_code == 1) //------------------------------------------------------------------> GET
             {
               if(_eTagStatus == VALID) //Sprawdzenie, czy ETag w ogole zostal nadany
               {
                 uint8_t second_hex_fresh = 0x00; //Tu w fcji checkETag bedzie wpisany aktualny drugi bajt ETaga
-                if( Numbers.checkETag(eTag[0], second_hex_fresh) ) 
+                if( Numbers.checkETag(eTag[0], second_hex_fresh) ) //Sprawdza, czy da sie znalezc zasob po pierwszym bajcie
                 {
                   Serial.print(F("Received ETag: 0x"));Serial.print(eTag[0], HEX); Serial.println(eTag[1], HEX);
                   Serial.print(F("Correct  ETag: 0x"));Serial.print(eTag[0], HEX); Serial.println(second_hex_fresh, HEX); //Debug
@@ -325,7 +322,9 @@ void loop() {
                   if( eTag[1] == second_hex_fresh ) //porownujemy otrzmany bajt 2 z naszym
                   {
                     Serial.println(F("ETag is fresh."));
-                    //Wyslac 2.03 z aktualnym ETagiem
+                    coapFactory.SetHeader(2, 3); //2.03 "Valid"
+                    //Dodac opcje z aktualnym ETagiem
+                    coapFactory.SendPacketViaUDP(Udp);
                   }
                   else
                   {
@@ -339,25 +338,36 @@ void loop() {
                     else if(eTag[0] = 0x13) resourceByEtag = STD_DEV;
                     else if(eTag[0] = 0x21) resourceByEtag = DIVIDIBLE;
                     else if(eTag[0] = 0x22) resourceByEtag = NUMBERS;
+
+                    coapFactory.SetHeader(2, 5); //2.05 "Content"
+                    //Dodac opcje z aktualnym ETagiem
+                    coapFactory.SendPacketViaUDP(Udp);
                   }
                    
                 }
-                else
-                {
-                  Serial.println(F("Bad ETag, couldn't map to existing resources' ETags"));
-                  //wyslac blad - 4.04 "Not found"? 
-                }
+                else _eTagStatus = INVALID;
+              }
+              if(_eTagStatus == INVALID) //W ten sposob pomijamy sytuacje, kiedy nie ma ETaga
+              {
+                  //Wyslanie bledu - 4.04 "Not found" 
+                  coapFactory.SetHeader(4, 4);
+                  coapFactory.SetPayloadString(F("Can't map ETag to resource"));
+                  coapFactory.SendPacketViaUDP(Udp);
               }
               
-              
-              if(uriPath == MEAN) 
+              if(_eTagStatus == NO_ETAG) //Jezeli byl ETag, nie sprawdzamy zasobu
               {
+                if(uriPath == MEAN) 
+                {
                 
-              } //else if inne zasoby...
-              else
-              {
-                Serial.println(F("Bad or empty URI path"));
-                //TODO wyslac blad
+                } //else if inne zasoby...
+                else
+                {
+                  //4.08; Request entity (tutaj URI) incomplete
+                  coapFactory.SetHeader(4, 8);
+                  coapFactory.SetPayloadString(F("Bad or empty URI"));
+                  coapFactory.SendPacketViaUDP(Udp);
+                }
               }
             }
 
@@ -365,8 +375,10 @@ void loop() {
             {
               if(contentFormat != 0) //inny niz text/plain
               {
-                Serial.println(F("Unsupported or unknown payload content format"));
-                //wyslac blad 4.15 
+                //Wysylanie bledu 4.15; Unsupported or unknown payload content format
+                coapFactory.SetHeader(4, 15);
+                //Dodac opcje Accept z text/plain
+                coapFactory.SendPacketViaUDP(Udp); 
               }
               else if(payloadMarker > 0) //Sprawdzenie, czy w ogole jest payload
               {
@@ -379,21 +391,23 @@ void loop() {
                     //Numer dodano poprawnie; odpowiedziec nalezyta wiadomoscia. Chyba mozna dolaczyc od razu ETag
                     //2.04:
                     coapFactory.SetHeader(2, 4);
-                    uint8_t payloadtest[] = {'t','e','s','t'};
-                    uint8_t payloadLen = sizeof(payloadtest)/sizeof(payloadtest[0]);
-                    coapFactory.SetPayload(payloadtest, payloadLen);
                     coapFactory.SendPacketViaUDP(Udp);
                   }
                   else
                   {
                     /*Zbior jest przepelniony: 
                     "W przypadku wyczerpania pamieci na liczby mozna w odpowiedzi umiescic opcję Size1" */
+                    coapFactory.SetHeader(5, 0); //5.00; "Internal server error"
+                    coapFactory.SetPayloadString(F("Number buffer full"));
+                    coapFactory.SendPacketViaUDP(Udp);
                   }
                 }
                 else
                 {
-                  Serial.println(F("Error: Non-decimal number in payload."));
-                  //Zwrocic blad
+                  //Wyslano cos innego niz znaki 0-9
+                  coapFactory.SetHeader(4, 0); //4.00; "Bad request"
+                  coapFactory.SetPayloadString(F("Non-numeric values in payload"));
+                  coapFactory.SendPacketViaUDP(Udp);
                 }
               }
             }
