@@ -1,4 +1,20 @@
 
+/*Builder* class for making and sending CoAP packets.
+Make sure to call the functions in proper order:
+1. Header or Token
+2. Token or header
+3. Options (if any)
+4. Payload (if any)
+5. Sending the packet
+
+Using a different order will overwrite octets and/or
+construct the packet in an incorrect order, which will corrupt the message.
+
+*using "factory" in the class name was a misnomer
+
+*/
+
+
 #define COAP_VERSION 1
 #define MAX_PAYLOAD_SIZE 50
 #define MAX_TOKEN_LEN 8
@@ -96,5 +112,17 @@ class coapFactory{
     }
   }
 
-  
+  void AddOptionFull(unsigned int optionNumber, uint8_t optionValues[], uint8_t optionLen)
+  {
+    
+  }
+};
+
+
+class coapOption{
+
+unsigned int optionNumber = 0;
+uint8_t optionValues[];
+unsigned int optionLen = 0;
+
 };

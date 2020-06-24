@@ -69,10 +69,7 @@ void loop() {
     if(packetSize>0){
         //czytamy pakiet - maksymalnie do 'PACKET_BUFFER_LENGTH' bajtow
         int packetLen=Udp.read(packetBuffer, PACKET_BUFFER_LENGTH); //dlugosc pakietu
-        
-        //if(len<=0) Udp.flush();return;     //nie ma danych - wywolujemy funkcje wymiecenia bufora
-            
-        //prezentujemy otrzymany pakiet (zakladajac ze zawiera znaki ASCII)
+
         Serial.println("\n\n+----Received a message----+");
         packetBuffer[packetLen]='\0';
 
@@ -80,8 +77,10 @@ void loop() {
 
         /*---1.1.S Interpretacja naglowka---*/
 
-        uint8_t _version = (0xC0 & packetBuffer[0])>>6; 
+    /*    uint8_t _version = (0xC0 & packetBuffer[0])>>6; 
         Serial.print(F("CoAP version: "));Serial.println(_version, DEC); //Tego tak naprawde nie potrzebujemy
+
+    */
         
         uint8_t _type = (0x30 & packetBuffer[0])>>4;              //1=NON, 0=CON
         
@@ -137,7 +136,7 @@ void loop() {
           uint16_t contentFormat = 0xFFFF;
           uint16_t acceptFormat = 0xFFFF;
           uint8_t _uriPath[URIPATH_MAX_SIZE]; //Tablica na znaki w postaci liczb
-          String uriPath = ""; //wl. URI; zaczyna od "NULL" zeby mozna bylo sprawdzic, czy URI w ogole byl obecny
+          String uriPath = ""; //wlasciwe URI
           
           while(!payloadFound && packetBuffer[marker]!='\0' ) //Dopoki nie znajdzie sie payload albo nie skonczy ramka
           {
