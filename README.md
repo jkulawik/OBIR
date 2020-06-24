@@ -1,24 +1,34 @@
 # Simple CoAP server
 Projekt z przedmiotu OBIR.
 
-Serwer CoAP obsługujący proste działania na zbiorze liczb.
+Serwer CoAP obsługujący proste działania na zbiorze liczb naturalnych.
 Projekt został napisany do współdziałania z platformą EBSimUnoEth.
 
 # Szybkie prototypowanie na EBSimUnoEth
 
-0. W `run_sim.bat` zmienić: ścieżkę EBSimUnoEth na własną, IP na IP swojej karty sieciowej
+0. W `run_sim.bat` zmienić: ścieżkę EBSimUnoEth na własną, IP na adres w podłączonej sieci, a także numer MAC swojej karty
 
 Następnie na początku każdej sesji programowania:
 
 1. Zweryfikować kod .ino w programie Arduino
 2. Skopiować ścieżkę .ino.hex wypisaną w terminalu w Arduino do `run_sim.bat`
 
-Ścieżka nie powinna zmieniać się dopóki nie zamkniecie Arduino, więc następnie dla każdej zmiany w kodzie wystarczy wykonać następujące kroki:
+Ścieżka nie powinna zmieniać się dopóki nie Arduino nie zostanie zamknięte, więc następnie dla każdej zmiany w kodzie wystarczy wykonać następujące kroki:
 
-3. (Opcjonalnie) Zamknąć aktualnie uruchomioną instancję EBSimUnoEth
+3. Zamknąć aktualnie uruchomioną (starą) instancję EBSimUnoEth
 4. Uruchomić EBSimUnoEth za pomocą `run_sim.bat`
 
 # Dokumentacja
+
+## Budowa programu
+
+Program ma zasadniczo 4 ważne sekcje:
+
+* Funkcja loop() w szkicu UDPServer.ino; zajmuje się odczytywaniem wiadomości
+* `Numbers.h`; zajmuje się logiką usługi, a także obsługą i walidacją ETagów
+* `Conversions.h`; zbiór funkcji konwertujących związanych z klasą String
+* `CoAP-factory.h`; Klasa zbudowana w duchu wzorca projektowego "Budowniczy" (omyłkowo nazwana imieniem innego wzorca),
+która stopniowo tworzy pakiety, a także może je wysyłać.
 
 ## Rozdzielenie odbioru i nadawania
 
