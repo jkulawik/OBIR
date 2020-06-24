@@ -303,6 +303,8 @@ void loop() {
 
         Serial.println("\n|--->Handling the message:");
         /*---2.S Odpowiadanie---*/
+
+        coapFactory.SetTokenAndMID(_token, _token_len, _mid); //Sa takie same dla kazdej odpowiedzi
         
           if(_class == 0)
           {
@@ -376,7 +378,10 @@ void loop() {
                   {
                     //Numer dodano poprawnie; odpowiedziec nalezyta wiadomoscia. Chyba mozna dolaczyc od razu ETag
                     //2.04:
-                    coapFactory.SetHeader(_token, _token_len, 2, 4, _mid);
+                    coapFactory.SetHeader(2, 4);
+                    uint8_t payloadtest[] = {'t','e','s','t'};
+                    uint8_t payloadLen = sizeof(payloadtest)/sizeof(payloadtest[0]);
+                    coapFactory.SetPayload(payloadtest, payloadLen);
                     coapFactory.SendPacketViaUDP(Udp);
                   }
                   else
