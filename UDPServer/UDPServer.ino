@@ -276,6 +276,8 @@ void loop() {
                 marker += optionLength;
                 Serial.println(F("Unsupported option")); 
               }
+
+              //TODO: opcje Block1, Block2, Size1, Size2 ?
             }
           }
 
@@ -373,11 +375,11 @@ void loop() {
                 }
                 else if(uriPath == AVERAGE)
                 {
-                   
+                   //TODO: pobrac floata z Numbers w wysylalnej formie (np string)
                 }
                 else if(uriPath == STD_DEV)
                 {
-                   
+                   //TODO: Jak wyzej
                 }
                 else if(uriPath == NUMBERS)
                 {
@@ -401,24 +403,42 @@ void loop() {
                    }
                 }
                 else if(uriPath == DIVIDIBLE)
-                { /*
-                  int arg = //pobrac z zapytania
-                  int cnt, leng = 0; 
-                  for(; cnt < Numbers.current_len; ++cnt)
-                    if(Numbers.nums[cnt] % arg == 0) ++len;
-                    /Wiadomo juz ile liczb jest podzielnych; mozna stworzyc tablice na wyniki
-                  int result[leng];
-                  for(cnt=0; cnt < Numbers.current_len; ++cnt)
-                    if(Numbers.nums[cnt] % arg == 0) result[cnt] = Numbers.nums[cnt];
-                    */
+                { 
+                  //TODO: wziac liczbe z query w URI i wlozyc do tablicy (ew. od razu int)
+                  
+                  /*
+                  unsigned int arg = 0; //Do tej zmiennej ponizsza linijka wpisze wartosc
+                  if(AnyBaseAsciiToInt(10, query, arg)) //Przyjmujemy tylko zapis dziesietny
+                  {
+                      String tmp = "Numbers dividable by " + arg;
+                      tmp += ": ";
+                      for(int cnt = 0; cnt < Numbers.current_len; ++cnt)
+                        if(Numbers.nums[cnt] % arg == 0)
+                        {
+                          tmp += Numbers.nums[cnt];
+                          tmp += ", ";
+                        }
+                        coapFactory.AddOptionSimple(12, 40); //12=opcja content-format, 40 = link format
+                        coapFactory.SetPayloadString(tmp); 
+                  } 
+                  else //Wyslano cos innego niz znaki 0-9
+                  {
+                      coapFactory.SetHeader(4, 0); //4.00; "Bad request"
+                      coapFactory.SetPayloadString(F("Non-numeric values in payload"));
+                      coapFactory.SendPacketViaUDP(Udp);
+                  }    
+                  */                                  
                 }
                 else if(uriPath == WELLKNOWN)
                 {
-                  String tmp = REOURCE1;
-                  tmp += REOURCE2;
-                  tmp += REOURCE3;
-                  tmp += REOURCE4;
-                  tmp += REOURCE5;
+                  String tmp = "";
+                  tmp += REOURCE1; //avg
+                  tmp += REOURCE2;  //mean
+                  //tmp += REOURCE3; //std-dev
+                  tmp += REOURCE4; //all nums
+                  tmp += REOURCE5; //divs
+
+                  //TODO: rozdzielic to na kilka pakietow
 
                   coapFactory.AddOptionSimple(12, 40); //12=opcja content-format, 40 = link format
                   coapFactory.SetPayloadString(tmp); 
@@ -441,7 +461,7 @@ void loop() {
               {
                 //Wysylanie bledu 4.15; Unsupported or unknown payload content format
                 coapFactory.SetHeader(4, 15);
-                //Dodac opcje Accept z text/plain
+                coapFactory.AddOptionSimple(12, 0); //12=opcja content-format, 0 = plain text
                 coapFactory.SendPacketViaUDP(Udp); 
               }
               else if(payloadMarker > 0) //Sprawdzenie, czy w ogole jest payload

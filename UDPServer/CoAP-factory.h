@@ -21,14 +21,14 @@ construct the packet in an incorrect order, which will corrupt the message.
 
 #define COAP_VERSION 1
 
-#define MAX_PAYLOAD_SIZE 205 /*wczesniej bylo 50*/
+#define MAX_PACKET_SIZE 220
 #define MAX_TOKEN_LEN 8
 #define TOKEN_LOCATION 4
 #define MAX_OPTIONS 5 
 
 class coapFactory{
 
-  uint8_t workPacket[MAX_PAYLOAD_SIZE];
+  uint8_t workPacket[MAX_PACKET_SIZE];
   unsigned int packetLen = 0;
 
   uint8_t workToken[MAX_TOKEN_LEN];
@@ -126,9 +126,10 @@ class coapFactory{
 
   void SetPayloadString(String str)
   {
-    if(str.length() <= MAX_PAYLOAD_SIZE)
+    unsigned int maxPayloadLen = MAX_PACKET_SIZE-packetLen;
+    if(str.length() <= maxPayloadLen )
     {
-      uint8_t TxPayload[MAX_PAYLOAD_SIZE+1];
+      uint8_t TxPayload[maxPayloadLen+1];
       str.toCharArray(TxPayload, str.length()+1); //+1 to miejsce na \0
       SetPayload(TxPayload, str.length()); //-1 zeby nie wysylac \0
     }

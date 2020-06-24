@@ -1,4 +1,6 @@
 
+
+
 /*Klasa obslugujaca zbior liczb naturalnych
 
 UWAGA: Poniewaz zwracanie danych przez klase jest zalezne od implementacji CoAP,
