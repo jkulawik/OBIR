@@ -4,13 +4,16 @@ Make sure to call the functions in proper order:
 1. Header or Token
 2. Token or header
 3. Options in option number order (if any) //Na razie nie ma sortowania
-4. Payload (if any)
+4. Payload (if any) or** PrepareOptions if there is no payload
 5. Sending the packet
+
 
 Using a different order will overwrite octets and/or
 construct the packet in an incorrect order, which will corrupt the message.
 
 *using "factory" in the class name was a misnomer
+
+**PrepareOptions is called within SetPayload, so it must be done manually if none was set.
 
 */
 

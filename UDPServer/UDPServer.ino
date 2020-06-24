@@ -328,7 +328,8 @@ void loop() {
                   {
                     Serial.println(F("ETag is fresh."));
                     coapFactory.SetHeader(2, 3); //2.03 "Valid"
-                    //Dodac opcje z aktualnym ETagiem
+                    coapFactory.AddOptionFull(4, eTag, 2); //4=ETag, tablica z tagiem, o dl. 2B
+                    coapFactory.PrepareOptions();
                     coapFactory.SendPacketViaUDP(Udp);
                   }
                   else
@@ -345,7 +346,8 @@ void loop() {
                     else if(eTag[0] = 0x22) resourceByEtag = NUMBERS;
 
                     coapFactory.SetHeader(2, 5); //2.05 "Content"
-                    //Dodac opcje z aktualnym ETagiem
+                    coapFactory.AddOptionFull(4, eTag, 2); //4=ETag, tablica z tagiem, o dl. 2B
+                    coapFactory.PrepareOptions();
                     coapFactory.SendPacketViaUDP(Udp);
                   }
                    
@@ -362,7 +364,7 @@ void loop() {
               
               if(_eTagStatus == NO_ETAG) //Jezeli byl ETag, nie sprawdzamy zasobu
               {
-                coapFactory.SetHeader(2, 5); //Wspolne dla wszystkich
+                coapFactory.SetHeader(2, 5); //Wspolne dla wszystkich, chyba ze zostanie zmienione
                 
                 if(uriPath == MEAN) //------------------------------>Obsluga zasobu z URI-path
                 {
@@ -379,11 +381,36 @@ void loop() {
                 }
                 else if(uriPath == NUMBERS)
                 {
-                   
+                   if(Numbers.current_len == 0)
+                   {
+                    //wyslac 4.08 (Request Entity Incomplete)
+                    coapFactory.SetHeader(4, 8);
+                    coapFactory.SetPayloadString(F("No numers to send"));
+                   }
+                   else
+                   {
+                      String tmp = "Numbers: ";
+                      for(int i=0; i < Numbers.current_len; ++i)
+                      {
+                        tmp+= Numbers.nums[i];
+                        tmp+= ", ";
+                      }
+                      //2.05 (content)
+                      coapFactory.AddOptionSimple(12, 0); //12=opcja content-format, 0 = plain text
+                      coapFactory.SetPayloadString(tmp); 
+                   }
                 }
                 else if(uriPath == DIVIDIBLE)
-                {
-                   
+                { /*
+                  int arg = //pobrac z zapytania
+                  int cnt, leng = 0; 
+                  for(; cnt < Numbers.current_len; ++cnt)
+                    if(Numbers.nums[cnt] % arg == 0) ++len;
+                    /Wiadomo juz ile liczb jest podzielnych; mozna stworzyc tablice na wyniki
+                  int result[leng];
+                  for(cnt=0; cnt < Numbers.current_len; ++cnt)
+                    if(Numbers.nums[cnt] % arg == 0) result[cnt] = Numbers.nums[cnt];
+                    */
                 }
                 else if(uriPath == WELLKNOWN)
                 {
