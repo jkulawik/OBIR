@@ -87,6 +87,8 @@ class Numbers
 
   //Metryka 1/3 - mediana
   float getMedian() {return median;}
+  int getMedianInt() {return (int) median;}
+  
   void countMedian()
   {
     if(current_len%2==0)

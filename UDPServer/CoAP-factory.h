@@ -17,7 +17,8 @@ construct the packet in an incorrect order, which will corrupt the message.
 #include "CoAP-option.h"
 
 #define COAP_VERSION 1
-#define MAX_PAYLOAD_SIZE 50
+
+#define MAX_PAYLOAD_SIZE 205 /*wczesniej bylo 50*/
 #define MAX_TOKEN_LEN 8
 #define TOKEN_LOCATION 4
 #define MAX_OPTIONS 5 
@@ -56,7 +57,10 @@ class coapFactory{
   {
     packetLen = 0;
     tokenLen = 0;
+    
     //wyczyscic opcje
+    optionCount = 0;
+    lastOptionNum = 0;
     
     //Reszta i tak bedzie nadpisana
   }
@@ -71,9 +75,12 @@ class coapFactory{
       workPacket[3] = (0x00FF & _messageID); //bierzemy drugie pol; zera powinny byc uciete przy konwersji
 
       if(packetLen == 0) packetLen = 4;
-    
+
+    if(tokenLen>0)
+    {
       for(int i=0; i < tokenLen; ++i) workPacket[TOKEN_LOCATION+i] = _tokenArr[i]; //Przepisujemy tokenLen bajtow
       packetLen += tokenLen;
+    }
 
       return true;
    }
@@ -122,7 +129,10 @@ class coapFactory{
       str.toCharArray(TxPayload, str.length()+1); //+1 to miejsce na \0
       SetPayload(TxPayload, str.length()); //-1 zeby nie wysylac \0
     }
+    else Serial.println(F("Payload too large!"));
   }
+
+  
 
   void AddOptionSimple(unsigned int optionNumber, uint8_t optionValue) //Dla opcji z jednym bajtem w wartosci
   {
@@ -136,12 +146,11 @@ class coapFactory{
     ++optionCount;
   }
 
+
   void PrepareOptions()
   {
     for(int j=0; j<optionCount; ++j) //Dla kazdej opcji
-    {
-      Serial.println(F("Reached option preparations"));
-      
+    {      
       uint8_t delta = options[j].optionNumber - lastOptionNum;
       
       uint8_t optionHeaderMark = packetLen; //Znacznik pierwszego bajtu opcji
@@ -174,5 +183,5 @@ class coapFactory{
     }
   }
 
-  
+ 
 };

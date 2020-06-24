@@ -9,18 +9,18 @@
 #define URIPATH_MAX_SIZE 255 /*max. rozmiar URI-Path w bajtach*/
 
 //Sciezki do zasobow
-#define AVERAGE "/metrics/average"
-#define MEAN "/metrics/mean"
-#define STD_DEV "/metrics/deviation"
-#define DIVIDIBLE "/numbers/divs"
-#define NUMBERS "/numbers/all"
+#define AVERAGE "/mets/avg"
+#define MEAN "/mets/mean"
+#define STD_DEV "/mets/dev"
+#define DIVIDIBLE "/nums/divs"
+#define NUMBERS "/nums/all"
 #define WELLKNOWN "/.well-known/core"
 
-#define REOURCE1 "</metrics/average>;rt=\"Average\";ct=0"
-#define REOURCE2 "</metrics/mean>;rt=\"Mean\";ct=0"
-#define REOURCE3 "</metrics/deviation>;rt=\"Standard deviation\";ct=0"
-#define REOURCE4 "</numbers/divs>;rt=\"Numbers dividable by a given number\";ct=0"
-#define REOURCE5 "</numbers/all>;rt=\"All stored numbers\";ct=0"
+#define REOURCE1 "</mets/avg>;rt=\"Average\";ct=0"
+#define REOURCE2 "</mets/mean>;rt=\"Mean\";ct=0"
+#define REOURCE3 "</mets/dev>;rt=\"Standard deviation\";ct=0"
+#define REOURCE4 "</nums/divs>;rt=\"Numbers dividable by a given number\";ct=0"
+#define REOURCE5 "</nums/all>;rt=\"All stored numbers\";ct=0"
 
 enum ETagStatus {NO_ETAG, VALID, INVALID};
 
@@ -362,18 +362,36 @@ void loop() {
               
               if(_eTagStatus == NO_ETAG) //Jezeli byl ETag, nie sprawdzamy zasobu
               {
+                coapFactory.SetHeader(2, 5); //Wspolne dla wszystkich
+                
                 if(uriPath == MEAN) //------------------------------>Obsluga zasobu z URI-path
                 {
-                
-                } 
+                  String tmp = "Mean: " + Numbers.getMedianInt();
+                  coapFactory.SetPayloadString(tmp); 
+                }
+                else if(uriPath == AVERAGE)
+                {
+                   
+                }
+                else if(uriPath == STD_DEV)
+                {
+                   
+                }
+                else if(uriPath == NUMBERS)
+                {
+                   
+                }
+                else if(uriPath == DIVIDIBLE)
+                {
+                   
+                }
                 else if(uriPath == WELLKNOWN)
                 {
-                  coapFactory.SetHeader(2, 5);
                   String tmp = REOURCE1;
-                /*  tmp += REOURCE2;
+                  tmp += REOURCE2;
                   tmp += REOURCE3;
                   tmp += REOURCE4;
-                  tmp += REOURCE5; */
+                  tmp += REOURCE5;
 
                   coapFactory.AddOptionSimple(12, 40); //12=opcja content-format, 40 = link format
                   coapFactory.SetPayloadString(tmp); 
@@ -384,8 +402,9 @@ void loop() {
                   //4.08; Request entity (tutaj URI) incomplete
                   coapFactory.SetHeader(4, 8);
                   coapFactory.SetPayloadString(F("Bad or empty URI"));
-                  coapFactory.SendPacketViaUDP(Udp);
                 }
+
+                coapFactory.SendPacketViaUDP(Udp); //Wspolne dla wszystkich
               }
             }
 
