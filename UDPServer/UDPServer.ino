@@ -16,6 +16,12 @@
 #define NUMBERS "/numbers/all"
 #define WELLKNOWN "/.well-known/core"
 
+#define REOURCE1 "</metrics/average>;rt=\"Average\";ct=0"
+#define REOURCE2 "</metrics/mean>;rt=\"Mean\";ct=0"
+#define REOURCE3 "</metrics/deviation>;rt=\"Standard deviation\";ct=0"
+#define REOURCE4 "</numbers/divs>;rt=\"Numbers dividable by a given number\";ct=0"
+#define REOURCE5 "</numbers/all>;rt=\"All stored numbers\";ct=0"
+
 enum ETagStatus {NO_ETAG, VALID, INVALID};
 
 byte MAC[]={0x28, 0x16, 0xAD, 0x71, 0xB4, 0xA7}; //Adres MAC wykorzystanej karty sieciowej
@@ -356,10 +362,23 @@ void loop() {
               
               if(_eTagStatus == NO_ETAG) //Jezeli byl ETag, nie sprawdzamy zasobu
               {
-                if(uriPath == MEAN) 
+                if(uriPath == MEAN) //------------------------------>Obsluga zasobu z URI-path
                 {
                 
-                } //else if inne zasoby...
+                } 
+                else if(uriPath == WELLKNOWN)
+                {
+                  coapFactory.SetHeader(2, 5);
+                  String tmp = REOURCE1;
+                /*  tmp += REOURCE2;
+                  tmp += REOURCE3;
+                  tmp += REOURCE4;
+                  tmp += REOURCE5; */
+
+                  coapFactory.AddOptionSimple(12, 40); //12=opcja content-format, 40 = link format
+                  coapFactory.SetPayloadString(tmp); 
+                  coapFactory.SendPacketViaUDP(Udp);
+                }
                 else
                 {
                   //4.08; Request entity (tutaj URI) incomplete

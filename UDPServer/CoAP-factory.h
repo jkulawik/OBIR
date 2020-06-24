@@ -3,7 +3,7 @@
 Make sure to call the functions in proper order:
 1. Header or Token
 2. Token or header
-3. Options (if any)
+3. Options in option number order (if any) //Na razie nie ma sortowania
 4. Payload (if any)
 5. Sending the packet
 
@@ -14,11 +14,13 @@ construct the packet in an incorrect order, which will corrupt the message.
 
 */
 
+#include "CoAP-option.h"
 
 #define COAP_VERSION 1
 #define MAX_PAYLOAD_SIZE 50
 #define MAX_TOKEN_LEN 8
-#define TOKEN_LOCATION 4 
+#define TOKEN_LOCATION 4
+#define MAX_OPTIONS 5 
 
 class coapFactory{
 
@@ -27,6 +29,10 @@ class coapFactory{
 
   uint8_t workToken[MAX_TOKEN_LEN];
   uint8_t tokenLen = 0;
+
+  coapOption options[MAX_OPTIONS];
+  uint8_t optionCount = 0;
+  unsigned int lastOptionNum = 0;
 
   public:
   //Konstruktor domyslny
@@ -41,6 +47,8 @@ class coapFactory{
     Udp.write(workPacket, packetLen);
     Udp.endPacket();
 
+    //PrepareOptions();
+
     CleanTheFactory();
   }
 
@@ -48,6 +56,8 @@ class coapFactory{
   {
     packetLen = 0;
     tokenLen = 0;
+    //wyczyscic opcje
+    
     //Reszta i tak bedzie nadpisana
   }
 
@@ -95,6 +105,8 @@ class coapFactory{
 
   void SetPayload(uint8_t payload[], uint8_t payloadLen)
   {
+    PrepareOptions();
+    
     workPacket[packetLen] = 0xFF;
     ++packetLen;
 
@@ -112,17 +124,55 @@ class coapFactory{
     }
   }
 
+  void AddOptionSimple(unsigned int optionNumber, uint8_t optionValue) //Dla opcji z jednym bajtem w wartosci
+  {
+    uint8_t optionValues[1] = {optionValue};
+    AddOptionFull(optionNumber, optionValues, 1);
+  }
+  
   void AddOptionFull(unsigned int optionNumber, uint8_t optionValues[], uint8_t optionLen)
   {
-    
+    options[optionCount] = coapOption(optionNumber, optionValues, optionLen);
+    ++optionCount;
   }
-};
 
+  void PrepareOptions()
+  {
+    for(int j=0; j<optionCount; ++j) //Dla kazdej opcji
+    {
+      Serial.println(F("Reached option preparations"));
+      
+      uint8_t delta = options[j].optionNumber - lastOptionNum;
+      
+      uint8_t optionHeaderMark = packetLen; //Znacznik pierwszego bajtu opcji
 
-class coapOption{
+      unsigned int oLen = options[j].optionLen; //Zeby nie wywolywac niepotrzebnie
 
-unsigned int optionNumber = 0;
-uint8_t optionValues[];
-unsigned int optionLen = 0;
+      //Pierwszy bajt - delta
+      if(delta <= 12){
+        workPacket[packetLen] = (delta & 0x0F) << 4;
+        ++packetLen;
+      }
+      //if(delta <= 268 && delta > 12) //umieszczanie kolejnych bajtow //<---------- rozszerzenia; do implementacji potem...
+      //if(delta >= 269) ...
 
+      //Pierwszy bajt - optionLen
+      if(oLen <= 12)
+      {
+        uint8_t oLen_8b = oLen; //Rzutujemy na mniejsza zmienna
+        workPacket[optionHeaderMark] = workPacket[optionHeaderMark] | oLen_8b; //sumujemy z istniejacymi bitami
+      }
+      //if(oLen <= 268 && oLen > 12) //umieszczanie kolejnych bajtow
+      //if(oLen >= 269) ...
+
+      //Option value:
+      for(int i=0; i < oLen; ++i)
+        workPacket[packetLen+i] = options[j].optionValues[i]; //Przepisujemy bajty wartosci
+      
+      packetLen += oLen; //Poprawiamy glowny marker
+      lastOptionNum = options[j].optionNumber;
+    }
+  }
+
+  
 };
