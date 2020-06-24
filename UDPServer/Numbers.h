@@ -13,32 +13,120 @@ Kod ten to m.in:
 */
 
 #define MAX_NUMBERS 5 //Rozmiar bufora przechowywanych liczb
+#define ETAG_MAX_SIZE 2 //Patrz: dokumentacja
+#include <math.h>
+
+//Makro do generacji losowego bajta:
+#define hexRAND random(0xFF)
 
 class Numbers
 {
   public:
-  int nums[MAX_NUMBERS];
-  int current_len;
+  unsigned int nums[MAX_NUMBERS];
+  int current_len = 0;
+  float median = 0, average = 0, deviation = 0; //Metryki
 
   /*Konstruktor domyslny*/
-  Numbers()
+  Numbers() {} 
+
+//Tablica do ETagow. Objasnienie w tabeli ponizej
+  uint8_t eTags [2][5] = {
+/*           rzad^  ^kolumna  */ 
+    {0x11, 0x12, 0x13, 0x21, 0x22},
+    {hexRAND,hexRAND,hexRAND,hexRAND,hexRAND}
+    };
+
+/*
++------------------+-------------+----------+-------------+---------------+-------------+
+| Column num: Name | 0 = AVERAGE | 1 = MEAN | 2 = STD_DEV | 3 = DIVIDIBLE | 4 = NUMBERS |
++------------------+-------------+----------+-------------+---------------+-------------+
+| 0 = Resource ID: | 0x11        | 0x12     | 0x13        | 0x21          | 0x22        |
+| 1 = Tag:         | rand        | rand     | rand        | rand          | rand        |
++------------------+-------------+----------+-------------+---------------+-------------+
+ */
+
+  bool checkETag(uint8_t id, uint8_t &tag) 
+  /*id - pierwszy bajt ETaga, tag - drugi 
+  Fcja sprawdza, czy pierwszy bajt sie zgadza;
+  Ponadto wpisuje aktualny tag do zmiennej tag */
   {
-    current_len = 0;
+    for(int i = 0; i < 5; ++i)
+    {
+      if(id == eTags[0][i])
+      {
+        tag = eTags[1][i];
+        return true;
+      }
+    }
+    return false;
   }
   
-  /*Dodaje numer do zbioru.
+  /*AddNum - Dodaje numer do zbioru.
   Zwraca false jezeli zbior jest pelny.
-  Sortuje zbior jezeli dodano element.*/
-  bool AddNum(int num) 
+  Sortuje zbior jezeli dodano element oraz przelicza metryki.*/
+  bool AddNum(unsigned int num) 
   {
     if(current_len < MAX_NUMBERS)
     {
       nums[current_len] = num;
       ++current_len;
-      void BubbleSort();
+      BubbleSort();
+
+      //Liczymy metryki przy dodaniu liczby, aby nie powtarzac obliczen przy GET
+      countMedian();      
+      countAverage();
+      countDeviation();
+
+      eTags[1][3] = hexRAND; //update Div ETag
+      eTags[1][4] = hexRAND; //update Numbers ETag
+
       return true;
     }
     else return false;
+  }
+
+  //Metryka 1/3 - mediana
+  float getMedian() {return median;}
+  void countMedian()
+  {
+    if(current_len%2==0)
+      median = float((nums[current_len/2]+nums[current_len/2 + 1])/2);
+    else median = nums[current_len-1/2];
+
+    eTags[1][1] = hexRAND; //update Mean ETag
+  }
+  
+  
+  //Metryka 2/3 - srednia
+  float getAverage() {return average;}
+  void countAverage()
+  {
+    int sum = 0;
+    
+    for(int i=0; i<current_len; i++)
+        sum += nums[i];
+    average = float(sum/current_len);
+
+    eTags[1][0] = hexRAND; //update Avg ETag
+  }
+
+  //Metryka 3/3 - odchylenie standardowe
+  float getStandardDeviation() {return deviation;}
+  void countDeviation()
+  {
+    if(average!=0)
+    {
+      float sum=0;
+      for(int i=0; i<current_len; i++)
+        sum += (nums[i]-average)*(nums[i]-average);
+      sum /= (current_len-1);
+      deviation = sqrt(sum);
+      /*Bardziej wyszukane algorytmy pierwiastkowania if we fancy:
+       https://www.codeproject.com/Articles/69941/Best-Square-Root-Method-Algorithm-Function-Precisi
+      */
+
+      eTags[1][2] = hexRAND; //update std-deviation ETag
+    }
   }
 
   void BubbleSort() //mozna zmodyfikowac do Comb sort jezeli bedzie za wolny
