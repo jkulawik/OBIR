@@ -474,7 +474,7 @@ void loop() {
               {
                 //Wysylanie bledu 4.15; Unsupported or unknown payload content format
                 coapFactory.SetHeader(4, 15);
-                //coapFactory.AddOptionSimple(17, 0); //17=opcja accept, 0 = plain text
+                //coapFactory.AddOptionSimple(17, 0); //17=opcja accept, 0 = plain text  //To nie bedzie dzialac bez poprawki w Coap-factory
                 coapFactory.PrepareOptions();
                 coapFactory.SendPacketViaUDP(Udp); 
               }
