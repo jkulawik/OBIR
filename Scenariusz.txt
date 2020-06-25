@@ -1,0 +1,21 @@
+
+//Block1,2 Size1,2 nie mamy w ogóle
+
+1. Discover 
+2. Get /mets (pokazanie zapytania o zły zasób)
+3. Get /mets/mean (pokazanie poprawnego zapytania - będzie bez liczby, bo był problem ze zwróceniem floata)
+
+Uwagi: inne zasoby nie zmieściły się w pojedynczym payloadzie i nie były zaimplementowane.
+/mets/avg/ nie jest zaimplementowane, ale jest wykrywane żeby pokazać działanie well-known/core
+Podobnie nums/divs - nie zdążyliśmy zaimplementować odczytu argumentu z URI
+
+4. Get /nums/all (pokazanie reakcji z pustym zbiorem - pojawi się też ETag)
+
+5. Put jakiegoś tekstu bez opcji debug albo ze złym content format - powinien być błąd "unsupported format". Uwaga na opcję "Accept"
+6. Put tekstu z opcją content-format text/plain - powinien być błąd że nie podano liczb
+7. Put tekstu z liczbą - powinno być 2.04 changed; można 2 razy żeby było coś w zbiorze
+
+8. Get /nums/all - teraz powinno zwrócić payload + ETag
+9. Get z ETagiem z poprzedniej odpowiedzi - powinno być 2.03 Valid
+10. Z innym drugim bajtem ETag - powinno być 2.05 z aktualnym ETagiem (payloadu nie będzie bo nie zdążyliśmy zaimplementować zwracania zasobu po ETagu)
+11. ETag o długości innej niż 2, albo pierwszy bajt inny niż zdefiniowane - 4.04 not found

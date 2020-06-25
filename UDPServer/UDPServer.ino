@@ -326,11 +326,13 @@ void loop() {
                   Serial.print(F("Correct  ETag: 0x"));Serial.print(eTag[0], HEX); Serial.println(second_hex_fresh, HEX); //Debug
                   
                   Serial.println(F("ETag matches an existing resource."));
+                  uint8_t correct_ETag_full [2] = {eTag[0], second_hex_fresh};
+
                   if( eTag[1] == second_hex_fresh ) //porownujemy otrzmany bajt 2 z naszym
                   {
                     Serial.println(F("ETag is fresh."));
                     coapFactory.SetHeader(2, 3); //2.03 "Valid"
-                    coapFactory.AddOptionFull(4, eTag, 2); //4=ETag, tablica z tagiem, o dl. 2B
+                    coapFactory.AddOptionFull(4, correct_ETag_full, 2); //4=ETag, tablica z tagiem, o dl. 2B
                     coapFactory.PrepareOptions();
                     coapFactory.SendPacketViaUDP(Udp);
                   }
@@ -338,7 +340,9 @@ void loop() {
                   {
                     Serial.println(F("ETag is outdated."));
                     //Wyslac 2.05 z aktualnym ETagiem i zawartoscia - tylko najpierw trzeba wiedziec jaka:
-                    
+
+                    //TODO: zwrocic odpowiedni zasob
+                    /*
                     String resourceByEtag = ""; //To bedzie sciezka, ktorej chcial klient
                     
                          if(eTag[0] = 0x11) resourceByEtag = AVERAGE; //Hexy z tabeli z Numbers.h
@@ -346,9 +350,10 @@ void loop() {
                     else if(eTag[0] = 0x13) resourceByEtag = STD_DEV;
                     else if(eTag[0] = 0x21) resourceByEtag = DIVIDIBLE;
                     else if(eTag[0] = 0x22) resourceByEtag = NUMBERS;
+                    */
 
                     coapFactory.SetHeader(2, 5); //2.05 "Content"
-                    coapFactory.AddOptionFull(4, eTag, 2); //4=ETag, tablica z tagiem, o dl. 2B
+                    coapFactory.AddOptionFull(4, correct_ETag_full, 2); //4=ETag, tablica z tagiem, o dl. 2B
                     coapFactory.PrepareOptions();
                     coapFactory.SendPacketViaUDP(Udp);
                   }
@@ -383,10 +388,16 @@ void loop() {
                 }
                 else if(uriPath == NUMBERS)
                 {
+                  //Znalezienie aktualnego ETaga
+                  uint8_t second_hex_fresh = 0x00; //Tu w fcji checkETag bedzie wpisany aktualny drugi bajt ETaga
+                  Numbers.checkETag(0x22, second_hex_fresh); //0x22 odpowiada zasobowi NUMBERS
+                  uint8_t fresh_ETag[2] = {0x22, second_hex_fresh};
+                      
                    if(Numbers.current_len == 0)
                    {
                     //wyslac 4.08 (Request Entity Incomplete)
                     coapFactory.SetHeader(4, 8);
+                    coapFactory.AddOptionFull(4, fresh_ETag, 2); //4=ETag, tablica z tagiem, o dl. 2B
                     coapFactory.SetPayloadString(F("No numers to send"));
                    }
                    else
@@ -397,7 +408,9 @@ void loop() {
                         tmp+= Numbers.nums[i];
                         tmp+= ", ";
                       }
+                      
                       //2.05 (content)
+                      coapFactory.AddOptionFull(4, fresh_ETag, 2); //4=ETag, tablica z tagiem, o dl. 2B
                       coapFactory.AddOptionSimple(12, 0); //12=opcja content-format, 0 = plain text
                       coapFactory.SetPayloadString(tmp); 
                    }
@@ -461,7 +474,8 @@ void loop() {
               {
                 //Wysylanie bledu 4.15; Unsupported or unknown payload content format
                 coapFactory.SetHeader(4, 15);
-                coapFactory.AddOptionSimple(12, 0); //12=opcja content-format, 0 = plain text
+                //coapFactory.AddOptionSimple(17, 0); //17=opcja accept, 0 = plain text
+                coapFactory.PrepareOptions();
                 coapFactory.SendPacketViaUDP(Udp); 
               }
               else if(payloadMarker > 0) //Sprawdzenie, czy w ogole jest payload
