@@ -166,7 +166,18 @@ class coapFactory{
         workPacket[packetLen] = (delta & 0x0F) << 4;
         ++packetLen;
       }
-      //if(delta <= 268 && delta > 12) //umieszczanie kolejnych bajtow //<---------- rozszerzenia; do implementacji potem...
+
+      //TODO: zaimplementowac to poprawnie
+      /*
+      if(delta < 268 && delta > 12) //umieszczanie kolejnych bajtow //<---------- rozszerzenia; do implementacji potem...
+      {
+        uint8_t delta2 = delta - 13;
+        delta = 13;
+        workPacket[packetLen] = (delta & 0x0F) << 4;
+        ++packetLen;
+        workPacket[packetLen] = delta2;
+        ++packetLen;
+      } */
       //if(delta >= 269) ...
 
       //Pierwszy bajt - optionLen
